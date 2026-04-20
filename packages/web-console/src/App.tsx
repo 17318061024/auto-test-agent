@@ -34,11 +34,34 @@ function App() {
   const [selectedTask, setSelectedTask] = useState<Task | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [logs, setLogs] = useState<LogEntry[]>([])
+  const [isFullscreen, setIsFullscreen] = useState(false)
 
   // 加载 Mock 任务
   useEffect(() => {
     loadMockTasks()
   }, [])
+
+  // ESC键退出全屏
+  useEffect(() => {
+    const handleKeyPress = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && isFullscreen) {
+        setIsFullscreen(false)
+      }
+    }
+
+    if (isFullscreen) {
+      document.addEventListener('keydown', handleKeyPress)
+      // 防止页面滚动
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = 'unset'
+    }
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyPress)
+      document.body.style.overflow = 'unset'
+    }
+  }, [isFullscreen])
 
   const loadMockTasks = async () => {
     try {
@@ -75,6 +98,10 @@ function App() {
         log.id === id ? { ...log, expanded: !log.expanded } : log
       )
     )
+  }
+
+  const toggleFullscreen = () => {
+    setIsFullscreen(!isFullscreen)
   }
 
   const handleStart = async () => {
@@ -245,12 +272,49 @@ function App() {
         </div>
 
         {/* 右侧：执行日志 */}
-        <div style={{ border: '1px solid #ddd', borderRadius: '8px', padding: '20px' }}>
+        <div
+          style={{
+            border: '1px solid #ddd',
+            borderRadius: '8px',
+            padding: '20px',
+            ...(isFullscreen && {
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              zIndex: 9999,
+              margin: 0,
+              borderRadius: 0,
+            })
+          }}
+        >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
             <h2 style={{ margin: 0 }}>📊 执行日志</h2>
-            <span style={{ fontSize: '12px', color: '#666' }}>
-              {logs.length} 条日志
-            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+              <span style={{ fontSize: '12px', color: '#666' }}>
+                {logs.length} 条日志
+              </span>
+              <button
+                onClick={toggleFullscreen}
+                style={{
+                  padding: '6px 12px',
+                  fontSize: '14px',
+                  background: '#2196F3',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontWeight: 'bold',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '5px',
+                }}
+                title={isFullscreen ? '退出全屏' : '全屏显示'}
+              >
+                {isFullscreen ? '🔄 退出全屏' : '🖥️ 全屏'}
+              </button>
+            </div>
           </div>
           <div
             style={{
@@ -260,7 +324,7 @@ function App() {
               borderRadius: '4px',
               fontFamily: 'monospace',
               fontSize: '13px',
-              height: '400px',
+              height: isFullscreen ? 'calc(100vh - 120px)' : '400px',
               overflowY: 'auto',
             }}
           >
