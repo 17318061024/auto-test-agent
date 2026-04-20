@@ -11,7 +11,12 @@
     "lint": "eslint . --ext .ts,.tsx",
     "format": "prettier --write \"**/*.{ts,tsx,json,md}\"",
     "typecheck": "tsc --noEmit",
-    "clean": "rm -rf node_modules **/node_modules **/dist"
+    "clean": "rm -rf node_modules **/node_modules **/dist",
+    "config": "tsx scripts/config.ts",
+    "config:init": "tsx scripts/config.ts init",
+    "config:validate": "tsx scripts/config.ts validate",
+    "config:show": "tsx scripts/config.ts show",
+    "config:check": "tsx scripts/config.ts check"
   },
   "keywords": [
     "automation",
