@@ -4,6 +4,8 @@
 
 import { Server as SocketIOServer } from 'socket.io'
 import { Server as HTTPServer } from 'http'
+import { config } from '@auto-test-agent/shared'
+import { logger } from '../utils/logger.js'
 import { ClientStore } from '../storage/ClientStore.js'
 import { TaskStore } from '../storage/TaskStore.js'
 import { ReportStore } from '../storage/ReportStore.js'
@@ -30,8 +32,9 @@ export class WSHandler {
   constructor(httpServer: HTTPServer) {
     this.io = new SocketIOServer(httpServer, {
       cors: {
-        origin: '*',
+        origin: config.cors.allowedOrigins,
         methods: ['GET', 'POST'],
+        credentials: true,
       },
     })
 
@@ -44,11 +47,11 @@ export class WSHandler {
 
   private setupHandlers(): void {
     this.io.on('connection', (socket) => {
-      console.log(`客户端连接: ${socket.id}`)
+      logger.clientConnect(socket.id)
 
       // 客户端注册
       socket.on(WSEvents.CLIENT_REGISTER, (data) => {
-        console.log('客户端注册:', data)
+        logger.clientRegister(socket.id, data)
         const client = this.clientStore.upsert({
           id: socket.id,
           name: data.name || 'Unknown',
@@ -74,14 +77,14 @@ export class WSHandler {
 
       // 任务进度
       socket.on(WSEvents.TASK_PROGRESS, (data) => {
-        console.log('任务进度:', data)
+        logger.taskProgress(data.taskId, data.currentStep, data.totalSteps, data.currentAction || '未知操作')
         // 广播给所有监听该任务的客户端
         this.io.emit(WSEvents.TASK_PROGRESS, data)
       })
 
       // 任务完成
       socket.on(WSEvents.TASK_COMPLETED, async (data) => {
-        console.log('任务完成:', data)
+        logger.taskComplete(data.taskId, data.duration || 0)
 
         // 保存报告
         const reportId = this.reportStore.create(data)
@@ -92,7 +95,7 @@ export class WSHandler {
 
       // 任务失败
       socket.on(WSEvents.TASK_FAILED, (data) => {
-        console.log('任务失败:', data)
+        logger.taskFail(data.taskId, new Error(data.error || '未知错误'))
 
         // 保存报告
         this.reportStore.create(data)
@@ -103,7 +106,7 @@ export class WSHandler {
 
       // 断开连接
       socket.on('disconnect', () => {
-        console.log(`客户端断开: ${socket.id}`)
+        logger.clientDisconnect(socket.id)
         this.clientStore.updateStatus(socket.id, 'offline')
       })
     })

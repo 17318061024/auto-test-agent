@@ -54,3 +54,5 @@ CLI 实现：midscene-agent setup 用于注册 midscene:// 自定义协议并配
 增加功能   agent可以自动调用客户端的chrome的能力 ，避免客户端装chromium失败 导致agent无法使用
 
 报错的日志步骤显眼一些 并且可以选择查看详细的报错分析
+
+再次全面检查可能需要优化的内容 或者补充的功能  检查是否存在明显bug缺陷

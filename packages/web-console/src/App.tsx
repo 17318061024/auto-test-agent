@@ -3,6 +3,7 @@
  */
 
 import { useState, useEffect } from 'react'
+import config from './config'
 import './App.css'
 
 interface Task {
@@ -41,13 +42,16 @@ function App() {
 
   const loadMockTasks = async () => {
     try {
-      const response = await fetch('http://localhost:3000/api/tasks/mock')
+      const response = await fetch(`${config.api.baseURL}/api/mock`)
       const data = await response.json()
       setTasks([data])
       setSelectedTask(data)
       addLog('✅ Mock 任务已加载', 'info')
     } catch (error) {
-      addLog('❌ 加载任务失败', 'error')
+      addLog('❌ 加载任务失败', 'error', {
+        error: error instanceof Error ? error.message : String(error),
+        solution: `请确保后端服务器正在运行 (${config.api.baseURL})`,
+      })
       console.error(error)
     }
   }
@@ -87,19 +91,29 @@ function App() {
     try {
       // 1. 创建任务
       addLog('1️⃣ 创建任务...', 'process')
-      const createResponse = await fetch('http://localhost:3000/api/tasks', {
+      const createResponse = await fetch(`${config.api.baseURL}/api/tasks`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(selectedTask),
       })
+
+      if (!createResponse.ok) {
+        throw new Error(`创建任务失败: ${createResponse.status}`)
+      }
+
       const task = await createResponse.json()
       addLog(`✅ 任务已创建: ${task.id}`, 'success')
 
       // 2. 运行任务
       addLog('2️⃣ 运行任务...', 'process')
-      const runResponse = await fetch(`http://localhost:3000/api/tasks/${task.id}/run`, {
+      const runResponse = await fetch(`${config.api.baseURL}/api/tasks/${task.id}/run`, {
         method: 'POST',
       })
+
+      if (!runResponse.ok) {
+        throw new Error(`运行任务失败: ${runResponse.status}`)
+      }
+
       const runData = await runResponse.json()
       addLog(`✅ 任务已分配给客户端: ${runData.clientId || '等待中'}`, 'success')
 

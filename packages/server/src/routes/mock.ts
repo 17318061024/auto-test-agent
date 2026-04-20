@@ -7,6 +7,7 @@
 import { Router } from 'express'
 import { MOCK_TASKS, getMockTask } from '../mock/tasks.js'
 import { MockTaskExecutor } from '../mock/executor.js'
+import { logger } from '../utils/logger.js'
 
 export function createMockRoutes(wsHandler: any): Router {
   const router = Router()
@@ -32,12 +33,11 @@ export function createMockRoutes(wsHandler: any): Router {
       return res.status(404).json({ error: '任务不存在' })
     }
 
-    console.log('\n🚀 开始执行 Mock 任务:', task.name)
-    console.log('📋 任务描述:', task.description)
+    logger.info(`开始执行 Mock 任务: ${task.name}`)
 
     const executor = new MockTaskExecutor({
       onProgress: (step, total, message) => {
-        console.log(`\n⏳ 进度: ${step}/${total} - ${message}`)
+        logger.taskProgress(task.id, step, total, message)
         // 广播进度到所有连接的客户端
         wsHandler?.emit?.('task:progress', {
           taskId: task.id,
@@ -47,14 +47,13 @@ export function createMockRoutes(wsHandler: any): Router {
         })
       },
       onComplete: (result) => {
-        console.log('\n✅ 任务执行完成!')
-        console.log('📊 结果:', JSON.stringify(result, null, 2))
+        logger.taskComplete(task.id, result.duration)
 
         // 广播完成事件
         wsHandler?.emit?.('task:completed', result)
       },
       onError: (error) => {
-        console.error('\n❌ 任务执行失败:', error)
+        logger.taskFail(task.id, error)
 
         // 广播错误事件
         wsHandler?.emit?.('task:failed', {

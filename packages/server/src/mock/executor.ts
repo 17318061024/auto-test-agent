@@ -4,6 +4,7 @@
  */
 
 import { chromium } from 'playwright'
+import { logger } from '../utils/logger.js'
 
 export interface MockTaskStep {
   id: string
@@ -42,13 +43,13 @@ export class MockTaskExecutor {
    * 初始化浏览器
    */
   async init(): Promise<void> {
-    console.log('🚀 初始化浏览器...')
+    logger.info('初始化浏览器...')
     this.browser = await chromium.launch({
       headless: false, // 显示浏览器窗口
       slowMo: 500, // 慢速模式，便于观察
     })
     this.page = await this.browser.newPage()
-    console.log('✅ 浏览器初始化完成')
+    logger.info('浏览器初始化完成')
   }
 
   /**
@@ -68,7 +69,7 @@ export class MockTaskExecutor {
         const stepStartTime = Date.now()
 
         this.onProgress?.(i + 1, task.steps.length, step.description)
-        console.log(`\n⏳ 步骤 ${i + 1}/${task.steps.length}: ${step.description}`)
+        logger.taskProgress(task.id, i + 1, task.steps.length, step.description)
 
         try {
           const result = await this.executeStep(step)
@@ -82,7 +83,7 @@ export class MockTaskExecutor {
             result,
           })
 
-          console.log(`✅ 步骤 ${i + 1} 完成 (耗时: ${stepDuration}ms)`)
+          logger.info(`步骤 ${i + 1} 完成 (耗时: ${stepDuration}ms)`)
 
           // 实时上报进度
           if (this.onProgress) {
@@ -99,7 +100,7 @@ export class MockTaskExecutor {
             error: error instanceof Error ? error.message : String(error),
           })
 
-          console.error(`❌ 步骤 ${i + 1} 失败:`, error)
+          logger.error(`步骤 ${i + 1} 失败`, error as Error)
           throw error
         }
       }
@@ -114,10 +115,7 @@ export class MockTaskExecutor {
         timestamp: Date.now(),
       }
 
-      console.log('\n✅ 任务执行完成！')
-      console.log(`⏱️  总耗时: ${totalDuration}ms`)
-      console.log(`📊 结果:`, finalResult)
-
+      logger.taskComplete(task.id, totalDuration)
       this.onComplete?.(finalResult)
 
       return finalResult
@@ -133,7 +131,7 @@ export class MockTaskExecutor {
         timestamp: Date.now(),
       }
 
-      console.error('\n❌ 任务执行失败:', error)
+      logger.taskFail(task.id, error as Error)
       this.onError?.(error as Error)
 
       throw error
@@ -204,7 +202,7 @@ export class MockTaskExecutor {
   private async cleanup(): Promise<void> {
     if (this.browser) {
       await this.browser.close()
-      console.log('🧹 浏览器已关闭')
+      logger.info('浏览器已关闭')
     }
   }
 
@@ -221,7 +219,7 @@ export class MockTaskExecutor {
       fullPage: true,
     })
 
-    console.log(`📸 截图已保存${filename ? ': ' + filename : ''}`)
+    logger.info(`截图已保存${filename ? ': ' + filename : ''}`)
     return screenshot
   }
 }

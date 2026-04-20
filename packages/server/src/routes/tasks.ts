@@ -6,6 +6,8 @@ import { Router } from 'express'
 import { TaskStore } from '../storage/TaskStore.js'
 import { ReportStore } from '../storage/ReportStore.js'
 import { WSHandler } from '../websocket/handler.js'
+import { validateTaskCreation, validateTaskUpdate } from '../middleware/validation.js'
+import { logger } from '../utils/logger.js'
 
 export function createTasksRouter(wsHandler: WSHandler): Router {
   const router = Router()
@@ -28,7 +30,7 @@ export function createTasksRouter(wsHandler: WSHandler): Router {
   })
 
   // 创建任务
-  router.post('/', (req, res) => {
+  router.post('/', validateTaskCreation, (req, res) => {
     try {
       const task = taskStore.create({
         name: req.body.name,
@@ -38,14 +40,17 @@ export function createTasksRouter(wsHandler: WSHandler): Router {
         config: req.body.config || {},
         status: 'pending',
       })
+
+      logger.taskStart(task.id, task.name)
       res.status(201).json(task)
     } catch (error) {
+      logger.error('创建任务失败', error as Error)
       res.status(400).json({ error: '创建任务失败' })
     }
   })
 
   // 更新任务
-  router.put('/:id', (req, res) => {
+  router.put('/:id', validateTaskUpdate, (req, res) => {
     const task = taskStore.update(req.params.id, req.body)
     if (!task) {
       return res.status(404).json({ error: '任务不存在' })
