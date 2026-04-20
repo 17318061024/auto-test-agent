@@ -1,0 +1,23 @@
+{
+  "name": "@auto-test-agent/task-executor",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@auto-test-agent/shared": "workspace:*",
+    "@midscene/web": "^1.0.0",
+    "playwright": "^1.40.0",
+    "socket.io-client": "^4.6.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.5",
+    "typescript": "^5.3.3"
+  }
+}

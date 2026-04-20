@@ -1,0 +1,27 @@
+{
+  "name": "@auto-test-agent/desktop-client",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/main/index.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@auto-test-agent/shared": "workspace:*",
+    "@auto-test-agent/task-executor": "workspace:*",
+    "electron": "^28.0.0",
+    "socket.io-client": "^4.6.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.5",
+    "@vitejs/plugin-react": "^4.2.1",
+    "typescript": "^5.3.3",
+    "vite": "^5.0.11",
+    "vite-plugin-electron": "^0.28.4",
+    "vite-plugin-electron-renderer": "^0.14.5"
+  }
+}

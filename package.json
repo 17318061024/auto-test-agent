@@ -1,0 +1,37 @@
+{
+  "name": "auto-test-agent",
+  "version": "0.1.0",
+  "private": true,
+  "description": "一个桌面客户端的自动化测试工具",
+  "scripts": {
+    "dev": "pnpm --filter \"./packages/**\" --parallel dev",
+    "dev:server": "pnpm --filter @auto-test-agent/server dev",
+    "dev:web": "pnpm --filter @auto-test-agent/web-console dev",
+    "build": "pnpm --filter \"./packages/**\" build",
+    "lint": "eslint . --ext .ts,.tsx",
+    "format": "prettier --write \"**/*.{ts,tsx,json,md}\"",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf node_modules **/node_modules **/dist"
+  },
+  "keywords": [
+    "automation",
+    "testing",
+    "electron",
+    "midscene",
+    "ai"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^7.0.0",
+    "@typescript-eslint/parser": "^7.0.0",
+    "eslint": "^8.57.0",
+    "prettier": "^3.2.5",
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "packageManager": "pnpm@8.15.1"
+}

@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Skill(update-config)",
+      "Bash(pnpm install:*)",
+      "Bash(npm install:*)",
+      "Bash(pnpm:*)",
+      "Bash(taskkill /F /IM node.exe)",
+      "Bash(curl -s http://localhost:3000/health)",
+      "Bash(curl -s http://localhost:5173)",
+      "Bash(curl:*)",
+      "Bash(netstat -ano)",
+      "Bash(findstr \":3000\\\\|:3001\\\\|:5173\")",
+      "Bash(npx playwright:*)",
+      "Bash(findstr :3000)",
+      "Bash(taskkill /PID 21780 /F)",
+      "Bash(taskkill /PID 12568 /F)",
+      "Bash(git add:*)"
+    ]
+  }
+}
