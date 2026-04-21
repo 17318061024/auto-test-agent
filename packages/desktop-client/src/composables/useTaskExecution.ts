@@ -264,6 +264,9 @@ export function useTaskExecution() {
   const startTask = (taskData: any) => {
     console.log('🚀 开始任务:', taskData)
 
+    // 清空之前的日志数据
+    currentTask.logs = []
+
     // 重置任务状态
     Object.assign(currentTask, {
       id: taskData.taskId || taskData.id,
@@ -275,10 +278,11 @@ export function useTaskExecution() {
       progress: 0,
       startTime: Date.now(),
       duration: 0,
-      logs: [],
+      endTime: undefined,
+      error: undefined,
     })
 
-    addLog('info', `开始执行任务: ${currentTask.name}`)
+    addLog('info', `🆕 开始执行新任务: ${currentTask.name}`)
     addLog('info', `任务ID: ${currentTask.id}`)
   }
 

@@ -272,7 +272,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, nextTick } from 'vue'
+import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { useTaskExecution } from '../../composables/useTaskExecution'
 
 // 使用任务执行 composable
@@ -284,8 +284,41 @@ const {
   screenshots,
   performanceData,
   startTask,
-  cancelTask
+  cancelTask,
+  clearLogs: clearTaskLogs
 } = useTaskExecution()
+
+// 监听任务状态变化，在任务开始前清空界面
+watch(() => currentTask.value?.status, (newStatus, oldStatus) => {
+  // 当从完成/失败状态转为运行状态时，清空所有界面信息
+  if ((oldStatus === 'completed' || oldStatus === 'failed' || oldStatus === 'cancelled') &&
+      newStatus === 'running') {
+    clearAllInterfaceData()
+  }
+})
+
+// 清空所有界面数据
+const clearAllInterfaceData = () => {
+  console.log('🧹 清空界面数据，准备新任务执行')
+
+  // 清空日志
+  if (logs.value && Array.isArray(logs.value)) {
+    logs.value = []
+  }
+
+  // 清空截图
+  if (screenshots.value && Array.isArray(screenshots.value)) {
+    screenshots.value = []
+  }
+
+  // 重置错误详情展开状态
+  showFullError.value = {}
+
+  // 重置日志过滤器
+  logFilter.value = 'all'
+
+  console.log('✅ 界面数据已清空')
+}
 
 // 性能数据
 const showPerformance = ref(false)
@@ -353,7 +386,7 @@ const toggleFullscreen = () => {
 }
 
 const clearLogs = () => {
-  logs.value = []
+  clearAllInterfaceData()
 }
 
 const toggleErrorDetails = (step: any) => {
