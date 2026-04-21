@@ -18,6 +18,7 @@ import Bt from "crypto";
 import Re from "stream";
 import br from "zlib";
 import Sr from "buffer";
+import "fs/promises";
 function Cr(r, e) {
   for (var t = 0; t < e.length; t++) {
     const s = e[t];
@@ -2624,7 +2625,7 @@ let Mn = class extends Nn {
   }
 };
 var Un = Mn;
-const { Duplex: Do } = Re, { randomFillSync: $n } = Bt, ls = $t, { EMPTY_BUFFER: qn, kWebSocket: Hn, NOOP: Vn } = re, { isBlob: le, isValidStatusCode: Wn } = xe, { mask: fs, toBuffer: ie } = Je, F = Symbol("kByteLength"), Gn = Buffer.alloc(4), qe = 8 * 1024;
+const { Duplex: Fo } = Re, { randomFillSync: $n } = Bt, ls = $t, { EMPTY_BUFFER: qn, kWebSocket: Hn, NOOP: Vn } = re, { isBlob: le, isValidStatusCode: Wn } = xe, { mask: fs, toBuffer: ie } = Je, F = Symbol("kByteLength"), Gn = Buffer.alloc(4), qe = 8 * 1024;
 let oe, fe = qe;
 const U = 0, jn = 1, zn = 2;
 let Yn = class ae {
@@ -3172,7 +3173,7 @@ function ei(r) {
   }).join(", ");
 }
 var ti = { format: ei, parse: Zn };
-const si = yr, ri = Ts, ni = Os, js = vr, ii = wr, { randomBytes: oi, createHash: ai } = Bt, { Duplex: Fo, Readable: Mo } = Re, { URL: mt } = ks, te = $t, ci = Un, hi = Xn, { isBlob: li } = xe, {
+const si = yr, ri = Ts, ni = Os, js = vr, ii = wr, { randomBytes: oi, createHash: ai } = Bt, { Duplex: Mo, Readable: Uo } = Re, { URL: mt } = ks, te = $t, ci = Un, hi = Xn, { isBlob: li } = xe, {
   BINARY_TYPES: Es,
   EMPTY_BUFFER: Ue,
   GUID: fi,
@@ -3754,7 +3755,7 @@ function er() {
   const r = this[R];
   this.removeListener("error", er), this.on("error", zs), r && (r._readyState = m.CLOSING, this.destroy());
 }
-const Ni = /* @__PURE__ */ Dt(wi), { Duplex: Uo } = Re, { tokenChars: $o } = xe, { Duplex: qo } = Re, { createHash: Ho } = Bt, { GUID: Vo, kWebSocket: Wo } = re, Ai = H("engine.io-client:websocket"), Ii = typeof navigator < "u" && typeof navigator.product == "string" && navigator.product.toLowerCase() === "reactnative";
+const Ni = /* @__PURE__ */ Dt(wi), { Duplex: $o } = Re, { tokenChars: qo } = xe, { Duplex: Ho } = Re, { createHash: Vo } = Bt, { GUID: Wo, kWebSocket: Go } = re, Ai = H("engine.io-client:websocket"), Ii = typeof navigator < "u" && typeof navigator.product == "string" && navigator.product.toLowerCase() === "reactnative";
 class Pi extends Ut {
   get name() {
     return "websocket";

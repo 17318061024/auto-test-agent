@@ -10,3 +10,6 @@ export * from './events'
 export * from './constants'
 export * from './config'
 export * from './utils'
+
+// HTML报告生成器
+export * from './HTMLReportGenerator'

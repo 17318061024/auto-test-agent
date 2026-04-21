@@ -19,6 +19,7 @@ import { join } from 'path'
 import { existsSync } from 'fs'
 // @ts-ignore - @midscene/web types may not be available
 import { midscene } from '@midscene/web'
+import { ScreenshotCapture } from './ScreenshotCapture.js'
 
 /**
  * 基本的HTML元素接口
@@ -126,6 +127,7 @@ export class MidsceneAutomationAdapter {
   private isInitialized = false
   private videoPath: string | null = null
   private screenshotDir: string = './screenshots'
+  private screenshotCapture: ScreenshotCapture = new ScreenshotCapture()
 
   /**
    * 初始化自动化适配器
@@ -136,6 +138,7 @@ export class MidsceneAutomationAdapter {
     this.browser = browser
     this.page = page
     this.isInitialized = true
+    this.screenshotCapture = new ScreenshotCapture(this.screenshotDir)
 
     // 设置视频录制
     try {
@@ -285,7 +288,7 @@ export class MidsceneAutomationAdapter {
   }
 
   /**
-   * 执行点击操作
+   * 执行点击操作（带红框标记）
    * @param action 点击操作
    * @returns 操作结果
    */
@@ -296,11 +299,23 @@ export class MidsceneAutomationAdapter {
     const timeout = action.params?.timeout || config.getTaskExecutorConfig().stepTimeout
 
     try {
+      // 操作前截图 - 带红框标记目标元素
+      await this.screenshotCapture.capture(this.page, `before_click_${Date.now()}`, {
+        highlightSelector: target,
+        highlightStyle: 'red-border'
+      })
+
       // 尝试使用 @midscene/web 的自动化能力（如果可用）
       // 如果不可用，则回退到传统选择器
 
       // 首先尝试作为选择器
       await this.page.click(target, { timeout })
+
+      // 操作后截图 - 带发光效果标记
+      await this.screenshotCapture.capture(this.page, `after_click_${Date.now()}`, {
+        highlightSelector: target,
+        highlightStyle: 'glow'
+      })
 
       // 获取元素信息
       const element = await this.page.$(target)
@@ -313,7 +328,7 @@ export class MidsceneAutomationAdapter {
       return {
         success: true,
         duration: 0,
-        info: { element: elementInfo },
+        info: { element: elementInfo }
       }
 
     } catch (error) {
@@ -510,8 +525,13 @@ export class MidsceneAutomationAdapter {
     let targetInput: any = null
 
     for (const input of inputs) {
-      const placeholder = await input.evaluate(el => el.placeholder || '')
-      const label = await input.evaluate(el => {
+      const placeholder = await input.evaluate((el: Element) => {
+        if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) {
+          return el.placeholder || ''
+        }
+        return ''
+      })
+      const label = await input.evaluate((el: Element) => {
         const parent = el.closest('label')
         return parent?.textContent?.trim() || ''
       })
