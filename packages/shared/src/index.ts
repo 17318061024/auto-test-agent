@@ -8,5 +8,5 @@
 export * from './types'
 export * from './events'
 export * from './constants'
-export * from './utils'
 export * from './config'
+export * from './utils'

@@ -1,23 +1,26 @@
 import { defineConfig } from 'vite'
 import electron from 'vite-plugin-electron'
 import renderer from 'vite-plugin-electron-renderer'
-import react from '@vitejs/plugin-react'
+import vue from '@vitejs/plugin-vue'
+import { resolve } from 'path'
 
 export default defineConfig({
   plugins: [
-    react(),
+    vue(),
     electron([
       {
         // 主进程入口
         entry: 'src/main/index.ts',
       },
-      {
-        // 预加载脚本（可选）
-        onstart(args) {
-          args.reload()
-        },
-      },
     ]),
     renderer(),
   ],
+  resolve: {
+    alias: {
+      '@': resolve(__dirname, 'src'),
+    },
+  },
+  server: {
+    port: 5173,
+  },
 })

@@ -1,358 +1,285 @@
-# ⚙️ 配置管理指南
+# Auto Test Agent - 配置管理指南
 
-## 📖 概述
+## 🚀 快速配置指南
 
-本项目采用统一的配置管理系统，支持通过环境变量快速配置所有关键参数，包括服务端路径、端口、数据库连接等。
+本文档提供了所有可配置变量的集中管理，方便快速配置和部署。
 
-## 🚀 快速开始
+## 📋 配置文件位置
 
-### 1. 复制环境配置文件
+- **主配置文件**: `packages/shared/src/config.ts`
+- **环境变量**: `.env` 文件 (项目根目录)
+- **用户配置**: `~/.auto-test-agent/config.json` (用户主目录)
 
-```bash
-# 复制默认配置
-cp .env.example .env
+## 🔧 核心配置项
 
-# 如果需要特定环境配置
-cp .env.development .env
-# 或
-cp .env.production .env
-```
-
-### 2. 编辑配置文件
-
-根据你的需求修改 `.env` 文件中的配置项。
-
-### 3. 初始化环境
+### 服务器配置
 
 ```bash
-pnpm config:init
-```
-
-这个命令会：
-- 创建所有必要的目录
-- 验证配置
-- 显示当前配置摘要
-
-## 📁 配置文件说明
-
-### 根目录配置文件
-
-| 文件 | 说明 |
-|------|------|
-| `.env.example` | 通用配置模板，包含所有可配置项 |
-| `.env.development` | 开发环境配置 |
-| `.env.production` | 生产环境配置 |
-| `.env` | 你的实际配置（不要提交到git） |
-
-### 前端配置文件
-
-| 文件 | 位置 | 说明 |
-|------|------|------|
-| `.env.example` | `packages/web-console/` | 前端配置模板 |
-| `.env` | `packages/web-console/` | 前端实际配置 |
-
-## 🔧 主要配置分类
-
-### 1. 服务器配置
-
-```bash
-# 服务器主机名 (默认: localhost)
+# 服务器地址
 SERVER_HOST=localhost
-
-# HTTP 服务器端口 (默认: 3000)
-PORT=3000
-
-# WebSocket 服务器端口 (默认: 3001)
+SERVER_PORT=3000
 WS_PORT=3001
-
-# 运行环境: development, production
-NODE_ENV=development
-
-# 启用 HTTPS
-HTTPS=false
+API_BASE_PATH=/api
+SERVER_TIMEOUT=30000
 ```
 
-**快速修改服务端路径：**
+### 客户端配置
+
 ```bash
-# 修改端口号
-PORT=8080
-WS_PORT=8081
-
-# 修改主机名
-SERVER_HOST=192.168.1.100
-
-# 启用 HTTPS
-HTTPS=true
+# 客户端基本设置
+CLIENT_NAME=auto-test-agent
+CLIENT_VERSION=0.2.0
+RECONNECT_INTERVAL=3000
+MAX_RECONNECT_ATTEMPTS=5
+HEARTBEAT_INTERVAL=30000
 ```
 
-### 2. 路径配置
+### 任务执行配置
 
 ```bash
-# 数据目录
+# 任务执行参数
+MAX_RETRIES=3
+RETRY_DELAY=2000
+STEP_TIMEOUT=30000
+HEADLESS=true
+PERFORMANCE_THRESHOLD=10000
+AUTO_OPTIMIZATION=true
+PERFORMANCE_MONITORING=true
+```
+
+### Chrome 配置
+
+```bash
+# Chrome 浏览器设置
+PREFER_SYSTEM_CHROME=true
+CHROME_PATH=
+CHROME_DEBUG_PORT=9222
+```
+
+### 日志配置
+
+```bash
+# 日志系统设置
+LOG_LEVEL=info
+ENABLE_FILE_LOGGING=true
+LOG_FILE_PATH=./logs
+MAX_LOG_FILE_SIZE=10
+LOG_RETENTION_DAYS=7
+```
+
+### UI 配置
+
+```bash
+# 界面设置
+ENABLE_FULLSCREEN_LOGS=true
+ENABLE_ERROR_ASSISTANT=true
+LOG_REFRESH_INTERVAL=1000
+```
+
+### 路径配置
+
+```bash
+# 数据存储路径
 DATA_DIR=./data
-
-# 日志目录
 LOGS_DIR=./logs
-
-# 截图目录
+TEMP_DIR=./temp
 SCREENSHOTS_DIR=./data/screenshots
-
-# 报告目录
 REPORTS_DIR=./data/reports
-
-# 任务数据目录
 TASKS_DIR=./data/tasks
 ```
 
-**快速修改存储路径：**
-```bash
-# 使用绝对路径
-DATA_DIR=D:/auto-test-agent/data
-LOGS_DIR=D:/auto-test-agent/logs
-SCREENSHOTS_DIR=D:/auto-test-agent/screenshots
-```
+## 🌐 网络配置
 
-### 3. CORS 配置
+### CORS 设置
 
 ```bash
-# 允许的来源，逗号分隔
+# 允许的跨域源
 ALLOWED_ORIGINS=http://localhost:5173,http://localhost:3000
 ```
 
-**添加新的允许来源：**
-```bash
-# 允许多个域名
-ALLOWED_ORIGINS=http://localhost:5173,https://example.com,https://www.example.com
-```
-
-### 4. 任务执行配置
+### API 限流
 
 ```bash
-# 任务超时时间 (毫秒)
-TASK_TIMEOUT=30000
-
-# 最大重试次数
-MAX_RETRIES=3
-
-# 无头模式 (后台运行)
-DEFAULT_HEADLESS=false
-
-# 失败时截图
-SCREENSHOT_ON_FAILURE=true
-
-# 慢速模式延迟 (便于观察)
-SLOW_MO=500
+# API 速率限制
+RATE_LIMIT_WINDOW=900000
+RATE_LIMIT_MAX=100
 ```
 
-### 5. 数据库配置
+## 🔐 安全配置
+
+### HTTPS/WSS
 
 ```bash
-# SQLite 数据库文件路径
-DATABASE_URL=./data/tasks.db
-
-# 连接池大小
-DATABASE_POOL_SIZE=10
+# 启用 HTTPS 和 WSS
+HTTPS=false
+WSS=false
 ```
 
-## 🛠️ 配置管理工具
+## 📊 性能配置
 
-### 可用命令
+### 性能监控
 
 ```bash
-# 初始化环境（创建目录）
-pnpm config:init
-
-# 验证配置
-pnpm config:validate
-
-# 显示当前配置
-pnpm config:show
-
-# 检查环境文件
-pnpm config:check
+# 性能分析
+ENABLE_PROFILING=false
+ENABLE_METRICS=true
 ```
 
-### 使用示例
+### Playwright 配置
 
 ```bash
-# 1. 首次设置环境
-pnpm config:init
-
-# 2. 修改配置后验证
-pnpm config:validate
-
-# 3. 查看当前配置
-pnpm config:show
+# Playwright 特定设置
+PLAYWRIGHT_BROWSERS_PATH=0
+PLAYWRIGHT_CHANNEL=chromium
+PLAYWRIGHT_DEVTOOLS=false
 ```
 
-## 🌍 环境切换
+## 🛠️ 配置管理 API
+
+### 获取配置
+
+```typescript
+import { config } from '@auto-test-agent/shared'
+
+// 获取完整配置
+const appConfig = config.getConfig()
+
+// 获取特定配置
+const serverConfig = config.getServerConfig()
+const taskConfig = config.getTaskExecutorConfig()
+const chromeConfig = config.getChromeConfig()
+```
+
+### 更新配置
+
+```typescript
+// 更新配置
+config.updateConfig({
+  taskExecutor: {
+    maxRetries: 5,
+    stepTimeout: 60000
+  }
+})
+```
+
+### 验证配置
+
+```typescript
+import { validateConfig } from '@auto-test-agent/shared'
+
+const validation = validateConfig()
+if (!validation.valid) {
+  console.error('配置错误:', validation.errors)
+}
+```
+
+## 🎯 环境特定配置
 
 ### 开发环境
 
 ```bash
-# 使用开发环境配置
-cp .env.development .env
-pnpm config:init
+NODE_ENV=development
+DEBUG=true
+HEADLESS=false
+LOG_LEVEL=debug
 ```
 
 ### 生产环境
 
 ```bash
-# 使用生产环境配置
-cp .env.production .env
-pnpm config:init
+NODE_ENV=production
+DEBUG=false
+HEADLESS=true
+LOG_LEVEL=warn
 ```
 
-## 📝 前端配置
-
-前端配置通过 Vite 环境变量管理，文件位于 `packages/web-console/.env`
-
-### API 配置
+### 测试环境
 
 ```bash
-# 后端 API 地址
-VITE_API_BASE_URL=http://localhost:3000
-
-# API 超时时间
-VITE_API_TIMEOUT=30000
+NODE_ENV=test
+DEBUG=true
+HEADLESS=true
+LOG_LEVEL=info
 ```
 
-### WebSocket 配置
+## 📝 配置文件示例
+
+### .env 文件示例
 
 ```bash
-# WebSocket 服务器地址
-VITE_WS_URL=ws://localhost:3001
+# Auto Test Agent 配置文件
+# 复制此文件为 .env 并根据需要修改
 
-# 自动连接
-VITE_WS_AUTO_CONNECT=true
+# 服务器配置
+SERVER_HOST=localhost
+SERVER_PORT=3000
+WS_PORT=3001
+
+# 任务执行配置
+MAX_RETRIES=3
+STEP_TIMEOUT=30000
+HEADLESS=true
+
+# Chrome 配置
+PREFER_SYSTEM_CHROME=true
+
+# 日志配置
+LOG_LEVEL=info
+ENABLE_FILE_LOGGING=true
 ```
 
-### 功能开关
+### TypeScript 配置文件示例
 
-```bash
-# 启用特定功能
-VITE_FEATURE_WEBSOCKET=true
-VITE_FEATURE_MOCK=true
-VITE_FEATURE_LOGS=true
-VITE_FEATURE_SCREENSHOTS=true
-VITE_FEATURE_REPORTS=true
+```typescript
+import { config, AppConfig } from '@auto-test-agent/shared'
+
+// 自定义配置
+const customConfig: Partial<AppConfig> = {
+  taskExecutor: {
+    maxRetries: 5,
+    retryDelay: 3000,
+    stepTimeout: 60000,
+    headless: false
+  },
+  server: {
+    host: '192.168.1.100',
+    port: 8080
+  }
+}
+
+// 应用自定义配置
+config.updateConfig(customConfig)
 ```
 
-## 🔍 配置验证
+## 🔄 配置优先级
 
-配置管理工具会自动验证：
+配置按以下优先级加载（高到低）：
 
-- ✅ 端口号范围 (1-65535)
-- ✅ 超时时间合理性
-- ✅ 重试次数范围
-- ✅ 路径有效性
+1. **环境变量** - 最高优先级
+2. **用户配置文件** - `~/.auto-test-agent/config.json`
+3. **项目 .env 文件**
+4. **默认配置** - `packages/shared/src/config.ts`
 
-## 📋 常见配置场景
+## 🚨 常见配置问题
 
-### 场景 1: 修改服务器端口
+### 问题 1: Chrome 找不到
 
-```bash
-# 修改 .env 文件
-PORT=8080
-WS_PORT=8081
+**解决方案**: 设置 `CHROME_PATH` 或启用 `PREFER_SYSTEM_CHROME=true`
 
-# 修改前端配置
-VITE_API_BASE_URL=http://localhost:8080
-VITE_WS_URL=ws://localhost:8081
-```
+### 问题 2: 端口被占用
 
-### 场景 2: 使用外部存储
+**解决方案**: 修改 `SERVER_PORT` 和 `WS_PORT`
 
-```bash
-# 所有数据存储到 D 盘
-DATA_DIR=D:/auto-test-agent/data
-LOGS_DIR=D:/auto-test-agent/logs
-SCREENSHOTS_DIR=D:/auto-test-agent/screenshots
-REPORTS_DIR=D:/auto-test-agent/reports
-DATABASE_URL=D:/auto-test-agent/tasks.db
-```
+### 问题 3: 权限错误
 
-### 场景 3: 网络部署
+**解决方案**: 检查 `DATA_DIR` 和 `LOGS_DIR` 的写入权限
 
-```bash
-# 监听所有网络接口
-SERVER_HOST=0.0.0.0
+## 📚 更多信息
 
-# 允许特定域名
-ALLOWED_ORIGINS=https://yourdomain.com,https://www.yourdomain.com
-
-# 启用 HTTPS
-HTTPS=true
-WSS=true
-```
-
-### 场景 4: 性能优化
-
-```bash
-# 增加数据库连接池
-DATABASE_POOL_SIZE=20
-
-# 延长任务超时时间
-TASK_TIMEOUT=120000
-
-# 启用性能指标
-ENABLE_METRICS=true
-```
-
-## 🚨 注意事项
-
-### 安全性
-
-- ⚠️ 不要将 `.env` 文件提交到 Git
-- ⚠️ 生产环境使用强密码和 HTTPS
-- ⚠️ 限制 CORS 允许的来源
-
-### 性能
-
-- 💡 根据硬件资源调整连接池大小
-- 💡 合理设置超时时间，避免资源浪费
-- 💡 生产环境建议启用无头模式
-
-### 路径
-
-- 💡 使用绝对路径避免路径混淆
-- 💡 确保应用有读写权限
-- 💡 定期清理日志和临时文件
-
-## 📚 相关文件
-
-- `.env.example` - 通用配置模板
-- `.env.development` - 开发环境配置
-- `.env.production` - 生产环境配置
-- `packages/shared/src/config.ts` - 配置管理代码
-- `packages/web-console/src/config.ts` - 前端配置代码
-- `scripts/config.ts` - 配置管理工具
-
-## 🔗 相关命令
-
-```bash
-# 环境管理
-pnpm config:init        # 初始化环境
-pnpm config:validate    # 验证配置
-pnpm config:show        # 显示配置
-pnpm config:check       # 检查文件
-
-# 开发命令
-pnpm dev:server         # 启动服务器
-pnpm dev:web            # 启动前端
-
-# 构建命令
-pnpm build              # 构建所有包
-```
-
-## 💡 最佳实践
-
-1. **首次使用**: 复制 `.env.example` 为 `.env`，运行 `pnpm config:init`
-2. **环境切换**: 使用对应环境的配置文件
-3. **配置修改**: 修改后运行 `pnpm config:validate` 验证
-4. **生产部署**: 使用 `.env.production` 并仔细检查安全配置
-5. **定期检查**: 使用 `pnpm config:show` 查看当前配置
+- [完整配置参考](../packages/shared/src/config.ts)
+- [环境变量说明](./ENV_VARIABLES.md)
+- [部署配置指南](./DEPLOYMENT.md)
 
 ---
-
-**需要帮助？** 查看 [README.md](./README.md) 或提交 Issue。
+**最后更新**: 2026-04-21
+**版本**: 1.0.0

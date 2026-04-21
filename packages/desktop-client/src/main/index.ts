@@ -2,62 +2,443 @@
  * @auto-test-agent/desktop-client
  *
  * Electron 主进程入口
+ *
+ * 主要功能：
+ * - 单实例应用管理
+ * - 主窗口创建和管理
+ * - 自定义协议处理 (midscene://)
+ * - 任务执行和状态管理
  */
 
-import { app, BrowserWindow } from 'electron'
-import { ProtocolHandler } from './protocol.js'
-import { WindowManager } from './window-manager.js'
+import { app, BrowserWindow, ipcMain } from 'electron'
+import path from 'path'
+import { registerProtocol, startProtocolListening, ProtocolAction } from './ProtocolHandler.js'
+import { wsClient, ConnectionState } from './WebSocketClient.js'
+import { config } from '@auto-test-agent/shared'
 
+/**
+ * 全局变量
+ */
 let mainWindow: BrowserWindow | null = null
-let protocolHandler: ProtocolHandler
-let windowManager: WindowManager
+let currentTaskId: string | null = null
 
-function createWindow() {
-  windowManager = new WindowManager(process.env.NODE_ENV === 'development')
-  mainWindow = windowManager.createMainWindow()
+/**
+ * 创建主窗口
+ */
+function createWindow(): BrowserWindow {
+  console.log('🪟 创建主窗口...')
 
-  // 初始化协议处理器
-  protocolHandler = new ProtocolHandler({
-    onTaskReceived: (taskId, params) => {
-      console.log('收到任务:', taskId, params)
-      // TODO: 实现任务执行逻辑
+  const window = new BrowserWindow({
+    width: 1200,
+    height: 800,
+    minWidth: 800,
+    minHeight: 600,
+    webPreferences: {
+      nodeIntegration: true,
+      contextIsolation: false,
     },
+    icon: path.join(__dirname, '../../assets/icon.png'),
+    title: 'Auto Test Agent',
   })
 
-  protocolHandler.setMainWindow(mainWindow)
+  // 开发模式加载Vite开发服务器
+  if (process.env.NODE_ENV === 'development') {
+    window.loadURL('http://localhost:5174')
+    window.webContents.openDevTools()
+  } else {
+    // 生产模式加载打包后的文件
+    window.loadFile(path.join(__dirname, '../renderer/index.html'))
+  }
 
-  mainWindow.on('closed', () => {
+  // 窗口关闭事件
+  window.on('closed', () => {
+    console.log('🪟 主窗口已关闭')
     mainWindow = null
   })
+
+  // 页面加载完成事件
+  window.webContents.on('did-finish-load', () => {
+    console.log('✅ 主窗口加载完成')
+
+    // 如果有待处理的任务，发送给渲染进程
+    if (currentTaskId) {
+      window.webContents.send('task:assigned', { taskId: currentTaskId })
+    }
+  })
+
+  console.log('✅ 主窗口创建成功')
+  return window
 }
 
-// 单实例锁
+/**
+ * 处理协议调用
+ * @param params 协议参数
+ */
+async function handleProtocolCall(params: { action: ProtocolAction; [key: string]: string | undefined }): Promise<void> {
+  console.log('📞 处理协议调用:', params)
+
+  try {
+    switch (params.action) {
+      case ProtocolAction.RUN:
+        // 运行任务
+        if (params.taskId) {
+          await handleRunTask(params.taskId, params.server)
+        } else {
+          console.warn('⚠️ 缺少任务ID参数')
+        }
+        break
+
+      case ProtocolAction.VIEW:
+        // 查看任务
+        if (params.taskId) {
+          await handleViewTask(params.taskId, params.server)
+        } else {
+          console.warn('⚠️ 缺少任务ID参数')
+        }
+        break
+
+      case ProtocolAction.CONFIG:
+        // 打开配置页面
+        handleOpenConfig()
+        break
+
+      case ProtocolAction.HEALTH:
+        // 健康检查
+        await handleHealthCheck()
+        break
+
+      default:
+        console.warn('⚠️ 未知的协议操作:', params.action)
+    }
+  } catch (error) {
+    console.error('❌ 处理协议调用失败:', error)
+  }
+}
+
+/**
+ * 处理运行任务
+ * @param taskId 任务ID
+ * @param server 服务器地址
+ */
+async function handleRunTask(taskId: string, server?: string): Promise<void> {
+  console.log(`🚀 开始执行任务: ${taskId}`)
+
+  // 保存当前任务ID
+  currentTaskId = taskId
+
+  // 显示主窗口
+  if (mainWindow) {
+    mainWindow.show()
+    mainWindow.focus()
+
+    // 发送任务执行命令到渲染进程
+    mainWindow.webContents.send('task:start', {
+      taskId,
+      server: server || config.getHTTPURL(),
+    })
+
+    console.log(`📤 任务执行命令已发送到渲染进程: ${taskId}`)
+  } else {
+    console.warn('⚠️ 主窗口未创建，无法执行任务')
+  }
+}
+
+/**
+ * 处理查看任务
+ * @param taskId 任务ID
+ * @param server 服务器地址
+ */
+async function handleViewTask(taskId: string, server?: string): Promise<void> {
+  console.log(`👀 查看任务: ${taskId}`)
+
+  if (mainWindow) {
+    mainWindow.show()
+    mainWindow.focus()
+
+    // 发送查看任务命令到渲染进程
+    mainWindow.webContents.send('task:view', {
+      taskId,
+      server: server || config.getHTTPURL(),
+    })
+  }
+}
+
+/**
+ * 处理打开配置
+ */
+function handleOpenConfig(): void {
+  console.log('⚙️ 打开配置页面')
+
+  if (mainWindow) {
+    mainWindow.show()
+    mainWindow.focus()
+
+    // 发送打开配置命令到渲染进程
+    mainWindow.webContents.send('config:open', {})
+  }
+}
+
+/**
+ * 处理健康检查
+ */
+async function handleHealthCheck(): Promise<void> {
+  console.log('🏥 执行健康检查')
+
+  try {
+    const health = {
+      status: 'ok',
+      version: app.getVersion(),
+      platform: process.platform,
+      arch: process.arch,
+      electron: process.versions.electron,
+      chrome: process.versions.chrome,
+      node: process.versions.node,
+    }
+
+    console.log('✅ 健康检查通过:', health)
+
+    if (mainWindow) {
+      mainWindow.webContents.send('health:check', health)
+    }
+  } catch (error) {
+    console.error('❌ 健康检查失败:', error)
+  }
+}
+
+/**
+ * 设置IPC通信处理
+ */
+function setupIpcHandlers(): void {
+  // 获取应用信息
+  ipcMain.handle('app:getInfo', async () => {
+    return {
+      name: app.getName(),
+      version: app.getVersion(),
+      platform: process.platform,
+      arch: process.arch,
+      electron: process.versions.electron,
+      chrome: process.versions.chrome,
+      node: process.versions.node,
+    }
+  })
+
+  // 获取配置信息
+  ipcMain.handle('config:get', async () => {
+    return config.getConfig()
+  })
+
+  // 任务状态更新
+  ipcMain.on('task:status', (event, data) => {
+    console.log('📊 任务状态更新:', data)
+
+    // 通过WebSocket实时同步到服务器
+    wsClient.sendTaskProgress(data.taskId, data)
+
+    // 广播到所有窗口
+    if (mainWindow) {
+      mainWindow.webContents.send('task:status:update', data)
+    }
+  })
+
+  // 任务完成
+  ipcMain.on('task:completed', (event, data) => {
+    console.log('✅ 任务完成:', data)
+    currentTaskId = null
+
+    // 通过WebSocket发送到服务器
+    wsClient.sendTaskCompleted(data.taskId, data)
+
+    // 广播到所有窗口
+    if (mainWindow) {
+      mainWindow.webContents.send('task:completed:update', data)
+    }
+  })
+
+  // 任务失败
+  ipcMain.on('task:failed', (event, data) => {
+    console.error('❌ 任务失败:', data)
+    currentTaskId = null
+
+    // 通过WebSocket发送到服务器
+    wsClient.sendTaskFailed(data.taskId, data)
+
+    // 广播到所有窗口
+    if (mainWindow) {
+      mainWindow.webContents.send('task:failed:update', data)
+    }
+  })
+
+  // 获取WebSocket连接状态
+  ipcMain.handle('ws:getState', async () => {
+    return wsClient.getConnectionState()
+  })
+
+  // 手动连接WebSocket
+  ipcMain.on('ws:connect', () => {
+    wsClient.connect()
+  })
+
+  // 手动断开WebSocket
+  ipcMain.on('ws:disconnect', () => {
+    wsClient.disconnect()
+  })
+
+  console.log('📡 IPC通信处理器已设置')
+}
+
+/**
+ * 设置WebSocket事件处理
+ */
+function setupWebSocketHandlers(): void {
+  // 任务分配
+  wsClient.on('task:assigned', (data) => {
+    console.log('📋 收到任务分配:', data)
+
+    if (mainWindow) {
+      mainWindow.webContents.send('task:assigned', data)
+    }
+  })
+
+  // 任务开始
+  wsClient.on('task:start', (data) => {
+    console.log('🚀 收到任务开始指令:', data)
+
+    if (mainWindow) {
+      mainWindow.webContents.send('task:start', data)
+    }
+  })
+
+  // 任务进度
+  wsClient.on('step:complete', (data) => {
+    console.log('✅ 步骤完成:', data)
+
+    if (mainWindow) {
+      mainWindow.webContents.send('step:complete', data)
+    }
+  })
+
+  // 步骤失败
+  wsClient.on('step:failed', (data) => {
+    console.log('❌ 步骤失败:', data)
+
+    if (mainWindow) {
+      mainWindow.webContents.send('step:failed', data)
+    }
+  })
+
+  console.log('📡 WebSocket事件处理器已设置')
+}
+
+/**
+ * 应用就绪事件处理
+ */
+app.whenReady().then(() => {
+  console.log('🚀 应用已就绪')
+
+  // 创建主窗口
+  mainWindow = createWindow()
+
+  // 设置IPC通信
+  setupIpcHandlers()
+
+  // 连接WebSocket服务器
+  wsClient.connect()
+
+  // 设置WebSocket事件处理
+  setupWebSocketHandlers()
+
+  // 启动协议监听
+  startProtocolListening(handleProtocolCall)
+
+  console.log('✅ 应用初始化完成')
+})
+
+/**
+ * 激活事件处理（macOS）
+ */
+app.on('activate', () => {
+  if (mainWindow === null) {
+    console.log('🔄 重新创建主窗口（macOS）')
+    mainWindow = createWindow()
+  }
+})
+
+/**
+ * 所有窗口关闭事件处理
+ */
+app.on('window-all-closed', () => {
+  console.log('🪟 所有窗口已关闭')
+
+  // 在macOS上，除非用户用Cmd+Q明确退出，否则应用保持活动状态
+  if (process.platform !== 'darwin') {
+    console.log('👋 退出应用')
+    app.quit()
+  }
+})
+
+/**
+ * 应用退出前事件处理
+ */
+app.on('before-quit', () => {
+  console.log('👋 应用即将退出')
+  // 清理资源和保存状态
+})
+
+/**
+ * 单实例锁处理
+ */
 const gotTheLock = app.requestSingleInstanceLock()
 
 if (!gotTheLock) {
+  console.log('🔒 已有实例运行，退出当前实例')
   app.quit()
 } else {
   app.on('second-instance', (event, commandLine, workingDirectory) => {
+    console.log('🔄 收到第二个实例启动请求')
+
     // 当运行第二个实例时，聚焦到主窗口
     if (mainWindow) {
-      if (mainWindow.isMinimized()) mainWindow.restore()
-      mainWindow.focus()
-    }
-  })
-
-  app.whenReady().then(() => {
-    createWindow()
-
-    app.on('activate', () => {
-      if (mainWindow === null) {
-        createWindow()
+      if (mainWindow.isMinimized()) {
+        mainWindow.restore()
       }
-    })
-  })
+      mainWindow.focus()
+      console.log('🪟 主窗口已聚焦')
+    }
 
-  app.on('window-all-closed', () => {
-    if (process.platform !== 'darwin') {
-      app.quit()
+    // 处理协议参数
+    const protocolArgs = commandLine.find(arg => arg.startsWith('midscene://'))
+    if (protocolArgs) {
+      console.log('📞 检测到协议参数:', protocolArgs)
+      // 协议处理由startProtocolListening自动处理
     }
   })
 }
+
+/**
+ * 注册自定义协议（必须在app.ready()之前调用）
+ */
+registerProtocol()
+
+/**
+ * 未捕获异常处理
+ */
+process.on('uncaughtException', (error) => {
+  console.error('❌ 未捕获的异常:', error)
+})
+
+/**
+ * 未处理的Promise拒绝处理
+ */
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('❌ 未处理的Promise拒绝:', reason)
+})
+
+console.log(`
+╔════════════════════════════════════════════════════════════╗
+║              Auto Test Agent - Desktop Client              ║
+║                                                              ║
+║  Version: ${app.getVersion().padEnd(46)}║
+║  Platform: ${process.platform.padEnd(45)}║
+║  Arch: ${process.arch.padEnd(52)}║
+╚════════════════════════════════════════════════════════════╝
+`)

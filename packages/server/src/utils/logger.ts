@@ -141,6 +141,3 @@ class Logger {
 
 // 导出单例
 export const logger = new Logger()
-
-// 导出类型
-export type { LogEntry }

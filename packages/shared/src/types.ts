@@ -1,3 +1,5 @@
+import type { WSEventType } from './events.js'
+
 /**
  * 任务状态
  */
@@ -101,23 +103,6 @@ export interface ClientInfo {
   platform: string
   status: 'online' | 'offline'
   lastSeen: number
-}
-
-/**
- * WebSocket 事件类型
- */
-export enum WSEventType {
-  // 客户端 → 服务器
-  CLIENT_REGISTER = 'client:register',
-  CLIENT_HEARTBEAT = 'client:heartbeat',
-  TASK_PROGRESS = 'task:progress',
-  TASK_COMPLETED = 'task:completed',
-  TASK_ERROR = 'task:error',
-
-  // 服务器 → 客户端
-  TASK_ASSIGNED = 'task:assigned',
-  TASK_CANCEL = 'task:cancel',
-  CLIENT_ACK = 'client:ack'
 }
 
 /**

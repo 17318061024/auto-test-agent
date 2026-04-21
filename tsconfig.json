@@ -1,21 +1,25 @@
 {
+  "extends": "./config/tsconfig.json",
   "compilerOptions": {
-    "target": "ES2022",
-    "module": "ESNext",
-    "moduleResolution": "bundler",
-    "lib": ["ES2022"],
-    "strict": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
-    "outDir": "./dist",
-    "rootDir": "./",
+    "rootDir": ".",
     "composite": true
   },
-  "exclude": ["node_modules", "dist", "build"]
+  "include": [
+    "packages/*/src/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "**/node_modules/**",
+    "**/dist/**",
+    "**/*.d.ts",
+    "tests/**"
+  ],
+  "references": [
+    { "path": "./packages/shared" },
+    { "path": "./packages/task-executor" },
+    { "path": "./packages/server" },
+    { "path": "./packages/desktop-client" },
+    { "path": "./packages/web-console" },
+    { "path": "./packages/cli" }
+  ]
 }

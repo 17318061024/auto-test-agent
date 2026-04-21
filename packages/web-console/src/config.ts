@@ -5,18 +5,18 @@
 
 // 获取环境变量或使用默认值
 const getEnvVar = (key: string, defaultValue: string): string => {
-  return import.meta.env[key] || defaultValue
+  return (import.meta as any).env?.[key] || defaultValue
 }
 
 const getEnvBool = (key: string, defaultValue: boolean): boolean => {
-  const value = import.meta.env[key]
+  const value = (import.meta as any).env?.[key]
   if (value === 'true') return true
   if (value === 'false') return false
   return defaultValue
 }
 
 const getEnvNumber = (key: string, defaultValue: number): number => {
-  const value = import.meta.env[key]
+  const value = (import.meta as any).env?.[key]
   return value ? parseInt(value, 10) : defaultValue
 }
 
@@ -64,7 +64,7 @@ const config = {
 
   // 开发配置
   development: {
-    enableDebug: getEnvBool('VITE_DEV_DEBUG', import.meta.env.DEV),
+    enableDebug: getEnvBool('VITE_DEV_DEBUG', (import.meta as any).env?.DEV),
     enableMockData: getEnvBool('VITE_DEV_MOCK_DATA', false),
     logLevel: getEnvVar('VITE_DEV_LOG_LEVEL', 'info'), // debug, info, warn, error
   },
@@ -93,7 +93,7 @@ export function getWebSocketUrl(): string {
  * 是否为开发模式
  */
 export function isDevelopment(): boolean {
-  return import.meta.env.DEV
+  return (import.meta as any).env?.DEV
 }
 
 /**

@@ -18,7 +18,23 @@
       "Bash(git add:*)",
       "Bash(git commit:*)",
       "Bash(git config:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(rm:*)",
+      "Bash(mv:*)",
+      "Bash(find \"G:/code/auto-test-agent/packages\" -type d -name \"dist\" -exec rm -rf {} +)",
+      "Bash(npx tsc:*)",
+      "Bash(powershell -Command \"Invoke-WebRequest -Uri 'https://playwright.azureedge.net/chromium-for-testing/142.0.7444.162/win64/chromium-win32.zip' -OutFile 'chromium-win32.zip'\")",
+      "Bash(node test-chromium-integration.js)",
+      "Bash(npm run:*)",
+      "Bash(npm list:*)",
+      "Bash(ls:*)",
+      "Bash(npm test:*)",
+      "Bash(xargs wc:*)",
+      "Bash(xargs grep:*)",
+      "Bash(grep -r \"export.*from.*shared\" packages/*/src/*.ts)",
+      "Bash(grep -r \"console\\\\.log\" packages/cli/src/*.ts)",
+      "Bash(tsc)",
+      "Bash(grep -E \"\\\\.\\(d\\\\.ts|js\\)$\")"
     ]
   }
 }

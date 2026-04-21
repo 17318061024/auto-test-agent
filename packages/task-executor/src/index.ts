@@ -5,10 +5,11 @@
  */
 
 export { TaskRunner } from './TaskRunner.js'
-export { MidsceneAdapter } from './MidsceneAdapter.js'
+export { MidsceneAutomationAdapter } from './MidsceneAutomationAdapter.js'
 export { PerformanceMonitor } from './PerformanceMonitor.js'
 export { ScreenshotCapture } from './ScreenshotCapture.js'
 export { ErrorRecovery } from './ErrorRecovery.js'
+export { ErrorDiagnosisAssistant } from './ErrorDiagnosisAssistant.js'
 export { AutoOptimization } from './AutoOptimization.js'
 export { PageContext } from './PageContext.js'
 export { VisualEvidence } from './VisualEvidence.js'

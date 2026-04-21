@@ -44,7 +44,6 @@ export class EnvironmentMonitor {
   async runAllChecks(): Promise<EnvironmentCheckResult[]> {
     this.results = []
 
-    console.log('🔍 开始环境检查...\n')
 
     // 1. 检查 Node.js 版本
     await this.checkNodeVersion()
@@ -325,11 +324,9 @@ export class EnvironmentMonitor {
    * 自动修复问题
    */
   async autoFix(): Promise<void> {
-    console.log('\n🔧 开始自动修复...\n')
 
     for (const result of this.results) {
       if (result.canFix && result.status === 'fail') {
-        console.log(`修复: ${result.name}`)
 
         if (result.name === 'Playwright') {
           await this.installPlaywright()
@@ -337,14 +334,12 @@ export class EnvironmentMonitor {
       }
     }
 
-    console.log('\n✅ 自动修复完成！\n')
   }
 
   /**
    * 安装 Playwright 浏览器
    */
   private async installPlaywright(): Promise<void> {
-    console.log('正在安装 Playwright 浏览器...')
 
     return new Promise((resolve, reject) => {
       const child = spawn('npx', ['playwright', 'install', 'chromium'], {
@@ -354,10 +349,8 @@ export class EnvironmentMonitor {
 
       child.on('close', (code) => {
         if (code === 0) {
-          console.log('✅ Playwright 浏览器安装成功')
           resolve()
         } else {
-          console.log('❌ Playwright 浏览器安装失败')
           reject(new Error('安装失败'))
         }
       })
@@ -372,20 +365,13 @@ export class EnvironmentMonitor {
     const warn = this.results.filter((r) => r.status === 'warn').length
     const fail = this.results.filter((r) => r.status === 'fail').length
 
-    console.log('\n📊 环境检查摘要:')
-    console.log(`   ✅ 通过: ${pass}`)
-    console.log(`   ⚠️  警告: ${warn}`)
-    console.log(`   ❌ 失败: ${fail}`)
 
     if (fail > 0) {
       const canFix = this.results.filter((r) => r.canFix && r.status === 'fail')
       if (canFix.length > 0) {
-        console.log(`\n💡 提示: 可以自动修复 ${canFix.length} 个问题`)
-        console.log('   运行: npx auto-test-agent setup --fix')
       }
     }
 
-    console.log('')
   }
 
   /**

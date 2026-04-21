@@ -3,8 +3,11 @@
   "compilerOptions": {
     "outDir": "./dist",
     "rootDir": "./src",
-    "composite": true
+    "composite": true,
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "skipLibCheck": true
   },
   "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"],
   "references": [{ "path": "../shared" }]
 }

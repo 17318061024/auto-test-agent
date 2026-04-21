@@ -11,5 +11,8 @@
     "./events": "./src/events.ts",
     "./constants": "./src/constants.ts",
     "./utils": "./src/utils.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.39"
   }
 }
