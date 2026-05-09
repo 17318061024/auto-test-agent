@@ -2,8 +2,7 @@
   "name": "@auto-test-agent/desktop-client",
   "version": "0.1.0",
   "private": true,
-  "type": "module",
-  "main": "./dist/main/index.js",
+  "main": "./dist-electron/index.js",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",

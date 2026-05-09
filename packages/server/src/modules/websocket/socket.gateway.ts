@@ -14,7 +14,7 @@ import {
 import { Server, Socket } from 'socket.io'
 import { ClientService } from '../storage/client.service.js'
 import { TaskService } from '../storage/task.service.js'
-import { Logger } from '@nestjs/common'
+import { Logger, Inject } from '@nestjs/common'
 
 @WebSocketGateway({
   cors: {
@@ -26,14 +26,23 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
   server: Server
 
   private readonly logger = new Logger(SocketGateway.name)
+  private readonly clientService: ClientService
+  private readonly taskService: TaskService
 
   constructor(
-    private readonly clientService: ClientService,
-    private readonly taskService: TaskService,
-  ) {}
+    @Inject(ClientService) private readonly clientService: ClientService,
+    @Inject(TaskService) private readonly taskService: TaskService,
+  ) {
+    this.logger.log('SocketGateway constructed');
+  }
 
   handleConnection(client: Socket) {
     this.logger.log(`Client connected: ${client.id}`)
+
+    if (!this.clientService) {
+      this.logger.warn('clientService not injected, skipping client registration')
+      return
+    }
 
     // 注册客户端
     this.clientService.create({
@@ -48,6 +57,8 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   handleDisconnect(client: Socket) {
     this.logger.log(`Client disconnected: ${client.id}`)
+
+    if (!this.clientService) return
 
     // 更新客户端状态
     const clients = this.clientService.findAll()

@@ -2,7 +2,7 @@
  * 任务服务
  */
 
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common'
+import { Injectable, NotFoundException, BadRequestException, Inject } from '@nestjs/common'
 import { TaskService } from '../storage/task.service.js'
 import { ReportService } from '../storage/report.service.js'
 import { SocketGateway } from '../websocket/socket.gateway.js'
@@ -13,9 +13,9 @@ import { logger } from '../../utils/logger.js'
 @Injectable()
 export class TasksService {
   constructor(
-    private readonly taskService: TaskService,
-    private readonly reportService: ReportService,
-    private readonly socketGateway: SocketGateway,
+    @Inject(TaskService) private readonly taskService: TaskService,
+    @Inject(ReportService) private readonly reportService: ReportService,
+    @Inject(SocketGateway) private readonly socketGateway: SocketGateway,
   ) {}
 
   create(createTaskDto: CreateTaskDto) {

@@ -42,8 +42,8 @@ function createWindow(): BrowserWindow {
   })
 
   // 开发模式加载Vite开发服务器
-  if (process.env.NODE_ENV === 'development') {
-    window.loadURL('http://localhost:5174')
+  if (process.env.VITE_DEV_SERVER_URL) {
+    window.loadURL(process.env.VITE_DEV_SERVER_URL)
     window.webContents.openDevTools()
   } else {
     // 生产模式加载打包后的文件

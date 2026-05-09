@@ -2,12 +2,12 @@
  * 客户端控制器
  */
 
-import { Controller, Get } from '@nestjs/common'
+import { Controller, Get, Inject } from '@nestjs/common'
 import { ClientsService } from './clients.service.js'
 
 @Controller('api/clients')
 export class ClientsController {
-  constructor(private readonly clientsService: ClientsService) {}
+  constructor(@Inject(ClientsService) private readonly clientsService: ClientsService) {}
 
   @Get()
   findAll() {

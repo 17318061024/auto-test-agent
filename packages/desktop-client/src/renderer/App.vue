@@ -141,7 +141,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useTaskExecution } from '../composables/useTaskExecution'
-import { config } from '@auto-test-agent/shared'
+import { config as sharedConfig } from '@auto-test-agent/shared'
 import TaskExecutionPanel from './components/TaskExecutionPanel.vue'
 
 // 使用任务执行 composable
@@ -162,7 +162,7 @@ const systemInfo = ref({
 })
 
 // 配置信息
-const config = config.getConfig()
+const config = ref(sharedConfig.getConfig())
 
 // 性能监控
 const memoryUsage = ref('0 MB')

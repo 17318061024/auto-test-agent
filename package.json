@@ -2,7 +2,7 @@
   "name": "auto-test-agent",
   "version": "0.2.0",
   "private": true,
-  "description": "一个桌面客户端的自动化测试工具",
+  "description": "\u4e00\u4e2a\u684c\u9762\u5ba2\u6237\u7aef\u7684\u81ea\u52a8\u5316\u6d4b\u8bd5\u5de5\u5177",
   "scripts": {
     "dev": "pnpm --filter \"./packages/**\" --parallel dev",
     "dev:server": "pnpm --filter @auto-test-agent/server dev",
@@ -49,5 +49,14 @@
     "node": ">=18.0.0",
     "pnpm": ">=10.0.0"
   },
-  "packageManager": "pnpm@10.28.2"
+  "packageManager": "pnpm@10.28.2",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@nestjs/core",
+      "electron",
+      "esbuild",
+      "sharp",
+      "vue-demi"
+    ]
+  }
 }

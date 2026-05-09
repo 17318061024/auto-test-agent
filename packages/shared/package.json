@@ -3,14 +3,34 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "main": "./src/index.ts",
-  "types": "./src/index.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
-    ".": "./src/index.ts",
-    "./types": "./src/types.ts",
-    "./events": "./src/events.ts",
-    "./constants": "./src/constants.ts",
-    "./utils": "./src/utils.ts"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./src/index.ts"
+    },
+    "./types": {
+      "types": "./dist/types.d.ts",
+      "import": "./dist/types.js",
+      "default": "./src/types.ts"
+    },
+    "./events": {
+      "types": "./dist/events.d.ts",
+      "import": "./dist/events.js",
+      "default": "./src/events.ts"
+    },
+    "./constants": {
+      "types": "./dist/constants.d.ts",
+      "import": "./dist/constants.js",
+      "default": "./src/constants.ts"
+    },
+    "./utils": {
+      "types": "./dist/utils.d.ts",
+      "import": "./dist/utils.js",
+      "default": "./src/utils.ts"
+    }
   },
   "devDependencies": {
     "@types/node": "^20.19.39"

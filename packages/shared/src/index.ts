@@ -5,11 +5,11 @@
  */
 
 // 类型导出
-export * from './types'
-export * from './events'
-export * from './constants'
-export * from './config'
-export * from './utils'
+export * from './types.js'
+export * from './events.js'
+export * from './constants.js'
+export * from './config.js'
+export * from './utils.js'
 
 // HTML报告生成器
-export * from './HTMLReportGenerator'
+export * from './HTMLReportGenerator.js'

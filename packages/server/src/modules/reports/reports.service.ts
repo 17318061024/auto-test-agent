@@ -2,12 +2,12 @@
  * 报告服务
  */
 
-import { Injectable, NotFoundException } from '@nestjs/common'
+import { Injectable, NotFoundException, Inject } from '@nestjs/common'
 import { ReportService } from '../storage/report.service.js'
 
 @Injectable()
 export class ReportsService {
-  constructor(private readonly reportService: ReportService) {}
+  constructor(@Inject(ReportService) private readonly reportService: ReportService) {}
 
   findAll() {
     return this.reportService.findAll()

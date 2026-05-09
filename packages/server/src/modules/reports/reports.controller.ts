@@ -2,12 +2,12 @@
  * 报告控制器
  */
 
-import { Controller, Get, Param, NotFoundException } from '@nestjs/common'
+import { Controller, Get, Param, NotFoundException, Inject } from '@nestjs/common'
 import { ReportsService } from './reports.service.js'
 
 @Controller('api/reports')
 export class ReportsController {
-  constructor(private readonly reportsService: ReportsService) {}
+  constructor(@Inject(ReportsService) private readonly reportsService: ReportsService) {}
 
   @Get()
   findAll() {

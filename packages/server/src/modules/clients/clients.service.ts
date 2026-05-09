@@ -2,12 +2,12 @@
  * 客户端服务
  */
 
-import { Injectable } from '@nestjs/common'
+import { Injectable, Inject } from '@nestjs/common'
 import { ClientService } from '../storage/client.service.js'
 
 @Injectable()
 export class ClientsService {
-  constructor(private readonly clientService: ClientService) {}
+  constructor(@Inject(ClientService) private readonly clientService: ClientService) {}
 
   findAll() {
     return this.clientService.findAll()

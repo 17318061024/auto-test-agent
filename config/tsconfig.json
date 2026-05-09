@@ -15,7 +15,9 @@
     "sourceMap": true,
     "outDir": "./dist",
     "rootDir": "./",
-    "composite": true
+    "composite": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true
   },
   "exclude": ["node_modules", "dist", "build"]
 }

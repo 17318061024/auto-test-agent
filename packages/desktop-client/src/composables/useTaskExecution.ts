@@ -207,13 +207,17 @@ export function useTaskExecution() {
   const initializeWebSocket = () => {
     console.log('🔌 初始化 WebSocket 客户端')
 
-    wsClient.value = new WebSocketClient()
+    try {
+      wsClient.value = new WebSocketClient()
 
-    // 设置事件监听
-    setupWebSocketListeners()
+      // 设置事件监听
+      setupWebSocketListeners()
 
-    // 连接到服务器
-    wsClient.value.connect()
+      // 连接到服务器
+      wsClient.value.connect()
+    } catch (error) {
+      console.warn('⚠️ WebSocket 初始化失败（可能在渲染进程环境）:', error)
+    }
   }
 
   /**
@@ -462,7 +466,43 @@ export function useTaskExecution() {
    * 组件挂载时的初始化
    */
   onMounted(() => {
+    // Try WebSocket connection, fall back to IPC from main process
     initializeWebSocket()
+
+    // Listen for IPC messages from main process
+    try {
+      const { ipcRenderer } = window.require('electron')
+      ipcRenderer.on('task:assigned', (_event: any, data: any) => {
+        console.log('📋 [IPC] 收到任务分配:', data)
+        startTask(data)
+      })
+      ipcRenderer.on('task:start', (_event: any, data: any) => {
+        console.log('🚀 [IPC] 收到任务开始:', data)
+        startTask(data)
+      })
+      ipcRenderer.on('step:complete', (_event: any, data: any) => {
+        console.log('✅ [IPC] 步骤完成:', data)
+      })
+      ipcRenderer.on('step:failed', (_event: any, data: any) => {
+        console.log('❌ [IPC] 步骤失败:', data)
+      })
+      ipcRenderer.on('task:status:update', (_event: any, data: any) => {
+        console.log('📊 [IPC] 任务状态更新:', data)
+        if (data.taskId) updateTaskStatus(data)
+      })
+      ipcRenderer.on('task:completed:update', (_event: any, data: any) => {
+        console.log('✅ [IPC] 任务完成:', data)
+        Object.assign(currentTask, { status: 'completed' })
+      })
+      ipcRenderer.on('task:failed:update', (_event: any, data: any) => {
+        console.log('❌ [IPC] 任务失败:', data)
+        Object.assign(currentTask, { status: 'failed', error: data.error })
+      })
+      connectionState.value = ConnectionState.CONNECTED
+      console.log('📡 IPC 监听器已设置')
+    } catch (e) {
+      console.warn('⚠️ IPC 不可用:', e)
+    }
   })
 
   /**

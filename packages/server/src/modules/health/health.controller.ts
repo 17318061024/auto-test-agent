@@ -2,12 +2,12 @@
  * 健康检查控制器
  */
 
-import { Controller, Get } from '@nestjs/common'
+import { Controller, Get, Inject } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 
 @Controller()
 export class HealthController {
-  constructor(private readonly configService: ConfigService) {}
+  constructor(@Inject(ConfigService) private readonly configService: ConfigService) {}
 
   @Get('health')
   health() {

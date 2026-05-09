@@ -278,15 +278,16 @@ import { useTaskExecution } from '../../composables/useTaskExecution'
 // 使用任务执行 composable
 const {
   currentTask,
-  taskStatus,
-  steps,
-  logs,
-  screenshots,
-  performanceData,
-  startTask,
   cancelTask,
-  clearLogs: clearTaskLogs
+  clearLogs: clearTaskLogs,
 } = useTaskExecution()
+
+// 从 currentTask 派生的计算属性
+const taskStatus = computed(() => currentTask.status)
+const steps = ref<any[]>([])
+const logs = computed(() => currentTask.logs)
+const screenshots = ref<any[]>([])
+const performanceData = ref({ browserLaunchTime: 0, totalPageLoadTime: 0, totalActionTime: 0 })
 
 // 监听任务状态变化，在任务开始前清空界面
 watch(() => currentTask.value?.status, (newStatus, oldStatus) => {
@@ -302,14 +303,10 @@ const clearAllInterfaceData = () => {
   console.log('🧹 清空界面数据，准备新任务执行')
 
   // 清空日志
-  if (logs.value && Array.isArray(logs.value)) {
-    logs.value = []
-  }
+  currentTask.logs = []
 
   // 清空截图
-  if (screenshots.value && Array.isArray(screenshots.value)) {
-    screenshots.value = []
-  }
+  screenshots.value = []
 
   // 重置错误详情展开状态
   showFullError.value = {}

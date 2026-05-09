@@ -87,7 +87,7 @@ export class WebSocketClient extends EventEmitter {
         reconnectionDelay: this.reconnectDelay,
         reconnectionAttempts: this.maxReconnectAttempts,
         timeout: 10000,
-        transports: ['websocket', 'polling'],
+        transports: ['polling', 'websocket'],
       })
 
       this.setupEventHandlers()
@@ -218,13 +218,23 @@ export class WebSocketClient extends EventEmitter {
   private registerClient(): void {
     if (!this.socket || !this.socket.connected) return
 
-    const clientInfo = {
+    const clientInfo: Record<string, any> = {
       type: 'desktop-client',
-      version: app.getVersion(),
-      platform: process.platform,
-      arch: process.arch,
-      hostname: require('os').hostname(),
+      platform: typeof process !== 'undefined' ? process.platform : 'unknown',
+      arch: typeof process !== 'undefined' ? process.arch : 'unknown',
       timestamp: Date.now(),
+    }
+
+    try {
+      clientInfo.version = app.getVersion()
+    } catch {
+      clientInfo.version = '0.1.0'
+    }
+
+    try {
+      clientInfo.hostname = require('os').hostname()
+    } catch {
+      clientInfo.hostname = 'unknown'
     }
 
     this.send(WSMessageType.CLIENT_REGISTER, clientInfo)

@@ -143,7 +143,7 @@ export const defaultConfig: AppConfig = {
   server: {
     host: process.env.SERVER_HOST || 'localhost',
     port: parseInt(process.env.SERVER_PORT || '3000', 10),
-    wsPort: parseInt(process.env.WS_PORT || '3001', 10),
+    wsPort: parseInt(process.env.WS_PORT || '3000', 10),
     apiBasePath: process.env.API_BASE_PATH || '/api',
     timeout: parseInt(process.env.SERVER_TIMEOUT || '30000', 10),
   },
@@ -350,7 +350,7 @@ export const legacyConfig = {
   server: {
     host: process.env.SERVER_HOST || 'localhost',
     port: parseInt(process.env.PORT || '3000', 10),
-    wsPort: parseInt(process.env.WS_PORT || '3001', 10),
+    wsPort: parseInt(process.env.WS_PORT || '3000', 10),
     nodeEnv: process.env.NODE_ENV || 'development',
   },
 
