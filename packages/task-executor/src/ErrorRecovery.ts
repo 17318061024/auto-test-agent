@@ -2,7 +2,7 @@
  * 错误恢复策略
  */
 
-import { ErrorDiagnosisAssistant, ErrorType } from './ErrorDiagnosisAssistant'
+import { ErrorDiagnosisAssistant, ErrorType } from './ErrorDiagnosisAssistant.js'
 
 export class ErrorRecovery {
   private diagnosisAssistant = new ErrorDiagnosisAssistant()

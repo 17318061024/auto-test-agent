@@ -1,244 +1,194 @@
-# 🚀 Auto Test Agent
+# Auto Test Agent
 
-> **企业级浏览器自动化测试工具** - 一键安装，智能执行，专业报告
+> 基于 AI 视觉的浏览器自动化测试工具。通过 Midscene.js 截图 + 大模型视觉识别，无需 CSS 选择器即可完成页面操作。
 
-[![生产就绪](https://img.shields.io/badge/状态-生产就绪-success)](https://img.shields.io/badge/状态-生产就绪-success)
-[![完成度](https://img.shields.io/badge/完成度-85%25-brightgreen)](https://img.shields.io/badge/完成度-85%25-brightgreen)
-[![TypeScript](https://img.shields.io/badge/TypeScript-100%25-blue)](https://img.shields.io/badge/TypeScript-100%25-blue)
-[![测试覆盖](https://img.shields.io/badge/测试覆盖-100%25-brightgreen)](https://img.shields.io/badge/测试覆盖-100%25-brightgreen)
-[![质量评分](https://img.shields.io/badge/质量评分-⭐⭐⭐⭐⭐-success)](https://img.shields.io/badge/质量评分-⭐⭐⭐⭐⭐-success)
+## 项目结构
 
----
+```
+auto-test-agent/
+├── packages/
+│   ├── server/            # NestJS 后端服务 (HTTP + WebSocket)
+│   ├── desktop-client/    # Electron 桌面客户端 (任务执行 + 可视化)
+│   ├── web-console/       # Vue3 Web 控制台 (任务管理 + 日志查看)
+│   ├── task-executor/     # 任务执行引擎 (Midscene + Playwright)
+│   ├── shared/            # 共享类型、常量、工具函数
+│   └── cli/               # 命令行安装工具
+├── scripts/               # 辅助脚本
+└── config/                # TypeScript 基础配置
+```
 
-## ✨ **核心特性**
+## 技术栈
 
-### 🎯 **一键安装，即装即用**
+| 模块 | 技术 |
+|------|------|
+| 后端 | NestJS + WebSocket + 内存存储 |
+| 桌面端 | Electron + Vue3 + TailwindCSS v4 |
+| Web 控制台 | Vue3 + Vite |
+| 自动化引擎 | Playwright + Midscene.js (视觉AI) |
+| 语言 | TypeScript (全栈) |
+| 包管理 | pnpm workspace (monorepo) |
+
+## 快速开始
+
+### 环境要求
+
+- **Node.js** >= 18.0.0
+- **pnpm** >= 10.0.0
+
+### 1. 安装依赖
+
 ```bash
-npx -y @auto-test-agent/cli install
-```
-一行命令完成桌面客户端安装，无需复杂配置
-
-### 🖥️ **桌面客户端 + Web控制台**
-- **协议唤醒**: `midscene://` 自定义协议一键启动任务
-- **实时监控**: Web界面实时查看执行进度和结果
-- **智能执行**: 自动选择最优浏览器，智能重试和错误恢复
-
-### 🔥 **视觉证据 - 红框标记**
-- **🔴 红框标记**: 自动高亮显示操作元素
-- **📸 对比截图**: 操作前后状态清晰可见
-- **🎯 精确定位**: 每个操作都有视觉证明
-
-### 📊 **专业HTML报告**
-- **美观模板**: 现代化设计，响应式布局
-- **交互展示**: 点击展开查看详细信息
-- **数据可视化**: 性能指标、环境信息一目了然
-
-### 🌐 **智能Chrome管理**
-- **🔍 自动检测**: 支持系统Chrome、便携版、自定义路径
-- **🏥 健康检查**: 自动验证Chrome可用性，自动修复问题
-- **⚙️ 参数优化**: 智能推荐最优启动参数
-
-### ⚡ **错误诊断助手**
-- **📊 统计面板**: 实时显示错误、警告、瓶颈数量
-- **🔍 智能过滤**: 按级别筛选日志，一键聚焦错误
-- **💡 修复建议**: 自动分析错误原因，提供解决方案
-
----
-
-## 🏗️ **架构设计**
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                     🌐 Web 控制台                         │
-│                 (Vue3 + Vite + TailwindCSS)              │
-│  ┌─────────────┬───────────────┬───────────────┐        │
-│  │  任务管理   │   实时监控     │   报告查看    │        │
-│  └──────┬──────┴───────────────┴───────────────┘        │
-│         │ WebSocket                                         │
-└─────────┼───────────────────────────────────────────────────┘
-          │
-┌─────────┴───────────────────────────────────────────────────┐
-│              🖥️ 桌面客户端 (Electron)                   │
-│  ┌──────────────────────────────────────────────────┐  │
-│  │   🎛️ 执行界面 - 实时日志 - 错误高亮 - 全屏查看  │  │
-│  │   📊 性能监控 - 步骤追踪 - 瓶颈标记            │  │
-│  │   🖼️ 截图画廊 - 红框标记 - 对比展示            │  │
-│  └──────────────────────────────────────────────────┘  │
-│         │ midscene:// 协议唤醒                          │
-└─────────┼───────────────────────────────────────────────────┘
-          │
-┌─────────┴───────────────────────────────────────────────────┐
-│               🌐 后端服务 (NestJS)                     │
-│  ┌─────────────┬───────────────┬───────────────┐        │
-│  │  任务管理   │  WebSocket    │   报告生成    │        │
-│  └──────┬──────┴───────────────┴───────────────┘        │
-│         │ HTTP API                                         │
-└─────────┼───────────────────────────────────────────────────┘
-          │
-┌─────────┴───────────────────────────────────────────────────┐
-│             ⚙️ 任务执行引擎 (@midscene/web)              │
-│  ┌──────────────────────────────────────────────────────┐  │
-│  │  🔍 智能浏览器管理 - ChromeManager                    │  │
-│  │  ⚡ 性能监控 - PerformanceMonitor                    │  │
-│  │  🏥 错误恢复 - ErrorRecovery                          │  │
-│  │  🖼️ 视觉证据 - ScreenshotCapture (红框标记)          │  │
-│  │  🧠 错误诊断 - ErrorDiagnosisAssistant              │  │
-│  └──────────────────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────────────┘
-```
-
----
-
-## 🚀 **快速开始**
-
-### **1. 安装桌面客户端**
-```bash
-npx -y @auto-test-agent/cli install
-```
-
-### **2. 启动开发环境**
-```bash
-# 克隆项目
-git clone https://github.com/liuxiaochuan111/auto-test-agent.git
+git clone <repo-url>
 cd auto-test-agent
-
-# 安装依赖
 pnpm install
-
-# 启动所有服务
-pnpm run dev
 ```
 
-### **3. 访问控制台**
-打开浏览器访问: `http://localhost:5174`
+### 2. 配置视觉 AI 模型
 
----
-
-## 💎 **核心能力**
-
-### **🎯 一键执行**
-- **协议唤醒**: `midscene://run?taskId=xxx` 一键启动任务
-- **自动执行**: 无需手动干预，全自动完成测试
-- **实时反馈**: Web控制台实时查看执行进度
-
-### **🔥 视觉证明**
-- **红框标记**: 清晰显示每个操作的目标元素
-- **对比截图**: 操作前后状态一目了然
-- **专业报告**: HTML格式报告，易于分享
-
-### **🧠 智能诊断**
-- **错误分析**: 自动识别错误类型和原因
-- **修复建议**: 提供具体的解决方案
-- **性能优化**: 自动标记性能瓶颈，给出优化建议
-
-### **⚙️ 灵活配置**
-- **统一配置**: 集中管理所有配置变量
-- **环境适配**: 自动检测和适配不同Chrome版本
-- **智能降级**: 三级降级策略确保可用性
-
----
-
-## 📊 **项目状态**
-
-### **完成度: 85% 🎉**
-- ✅ **核心功能**: 100% 完成
-- ✅ **高优先级功能**: 100% 完成
-- ⏳ **扩展功能**: 15% 待完成
-
-### **质量指标: ⭐⭐⭐⭐⭐**
-- ✅ **TypeScript编译**: 100% 成功 (6/6包)
-- ✅ **自动化测试**: 100% 通过 (11/11测试)
-- ✅ **开发环境**: 100% 正常启动
-- ✅ **生产就绪**: 可立即部署使用
-
----
-
-## 🎯 **使用场景**
-
-### **🧪 测试自动化**
-- 回归测试
-- 功能验证
-- 兼容性测试
-- 性能测试
-
-### **👥 团队协作**
-- 测试任务共享
-- 执行结果同步
-- 报告分发
-- 历史追溯
-
-### **📈 质量保证**
-- 自动化测试执行
-- 测试报告生成
-- 问题追踪记录
-- 性能数据分析
-
----
-
-## 🛠️ **开发状态**
-
-### **✅ 已完成 (85%)**
-- 🔥 错误日志显眼展示
-- 🖼️ 视觉证据增强 (红框标记)
-- 🌐 Chrome 系统调用优化
-- 📊 HTML 报告生成
-- 🧪 完整测试体系
-
-### **📋 待完成 (15%)**
-- 元测试和鲁棒性测试
-- 批量任务支持
-- 邮件/群机器人集成
-- 多浏览器扩展
-
----
-
-## 📚 **技术栈**
-
-### **前端**
-- **框架**: Vue3 + Vite
-- **UI**: TailwindCSS
-- **状态管理**: Composables
-- **桌面端**: Electron
-
-### **后端**
-- **框架**: NestJS
-- **通信**: WebSocket + HTTP
-- **数据**: 内存存储 + SQLite
-- **API**: RESTful + GraphQL
-
-### **自动化**
-- **引擎**: @midscene/web
-- **浏览器**: Playwright
-- **语言**: TypeScript
-- **测试**: Jest
-
----
-
-## 📞 **快速链接**
-
-### **📖 文档**
-- [配置指南](CONFIGURATION.md) - 统一配置管理
-- [功能审计报告](docs/功能审计报告.md) - 详细功能分析
-- [开发指南](docs/README.md) - 完整开发文档
-
-### **🚀 开始使用**
-- [安装指南](#-快速开始)
-- [使用示例](docs/guides/QUICKSTART.md)
-- [API文档](docs/api/API_REFERENCE.md)
-
----
-
-## 🎊 **开始使用**
+桌面客户端需要一个视觉模型来定位页面元素。在 `packages/desktop-client/` 下创建 `.env` 文件：
 
 ```bash
-# 一键安装
-npx -y @auto-test-agent/cli install
-
-# 启动开发
-pnpm install && pnpm run dev
-
-# 访问控制台
-# http://localhost:5174
+cp packages/desktop-client/.env.example packages/desktop-client/.env
 ```
 
-**🎉 Auto Test Agent - 让浏览器自动化测试变得简单高效！**
+编辑 `.env`，填入你的 API Key。支持的模型：
+
+| 模型系列 | MIDSCENE_MODEL_NAME | MIDSCENE_MODEL_FAMILY | MIDSCENE_MODEL_BASE_URL |
+|----------|-------------------|----------------------|------------------------|
+| 智谱 GLM | `glm-4.6v` | `glm-v` | `https://open.bigmodel.cn/api/paas/v4` |
+| 通义千问 | `qwen3-vl-plus` | `qwen3-vl` | `https://dashscope.aliyuncs.com/compatible-mode/v1` |
+| Google Gemini | `gemini-3-flash` | `gemini` | `https://generativelanguage.googleapis.com/v1beta/openai/` |
+
+完整配置参考: [Midscene 模型配置文档](https://midscenejs.com/model-common-config)
+
+### 3. 安装 Playwright 浏览器
+
+桌面客户端用 Playwright 打开浏览器执行任务：
+
+```bash
+cd packages/desktop-client
+npx playwright install chromium
+```
+
+### 4. 启动服务
+
+**方式一：全部启动**
+
+```bash
+pnpm dev
+```
+
+**方式二：分别启动（推荐开发时使用）**
+
+```bash
+# 终端 1 - 启动后端服务 (端口 3000)
+pnpm dev:server
+
+# 终端 2 - 启动 Web 控制台 (端口 5174)
+pnpm dev:web
+
+# 终端 3 - 启动桌面客户端 (Electron)
+cd packages/desktop-client && pnpm dev
+```
+
+### 5. 访问界面
+
+- **Web 控制台**: http://localhost:5174
+- **后端 API**: http://localhost:3000
+- **桌面客户端**: 自动启动 Electron 窗口
+
+## 运行流程
+
+```
+1. Web 控制台 → 创建任务 → POST /api/tasks
+2. Web 控制台 → 执行任务 → POST /api/tasks/{id}/run
+3. 后端 → 通过 WebSocket 分配任务给桌面客户端
+4. 桌面客户端 → 用 Playwright 打开真实浏览器
+5. 桌面客户端 → 每一步用 Midscene 截图 + AI 识别 → 操作元素
+6. 桌面客户端 → 实时返回步骤进度 → Web/桌面端同步显示
+```
+
+## 各包说明
+
+### packages/server (后端)
+
+- 框架: NestJS
+- 端口: 3000 (HTTP + WebSocket)
+- API 路由: `/api/tasks`, `/api/mock`, `/api/clients`
+- WebSocket 事件: `task:assigned`, `task:updated`, `client:register`
+- 启动: `pnpm dev:server` 或 `cd packages/server && pnpm dev`
+
+### packages/desktop-client (桌面客户端)
+
+- 框架: Electron + Vue3 + TailwindCSS v4
+- 端口: Vite 开发服务器 5173 (仅开发时)
+- 入口: `src/main/index.ts` (Electron 主进程), `src/renderer/` (渲染进程)
+- 核心功能: 接收 WebSocket 任务 → 用 Playwright 打开浏览器 → Midscene 视觉 AI 执行
+- 配置: `packages/desktop-client/.env` (必须配置视觉模型 API Key)
+- 启动: `cd packages/desktop-client && pnpm dev`
+
+> **注意**: 首次运行前必须配置 `.env` 文件并安装 Playwright 浏览器，否则任务执行会失败。
+
+### packages/web-console (Web 控制台)
+
+- 框架: Vue3 + Vite
+- 端口: 5174
+- 配置: `src/config.ts`，支持环境变量覆盖 (见 `.env.example`)
+- 启动: `pnpm dev:web` 或 `cd packages/web-console && pnpm dev`
+
+### packages/task-executor (任务执行引擎)
+
+- 提供 TaskRunner、ErrorRecovery、ChromeManager 等模块
+- 被 desktop-client 引用
+- 启动: 无需单独启动，作为库使用
+
+### packages/shared (共享模块)
+
+- 类型定义、事件常量、工具函数
+- 被 server / desktop-client / web-console / task-executor 引用
+- 无需单独启动
+
+### packages/cli (命令行工具)
+
+- `npx @auto-test-agent/cli install` 安装桌面客户端
+- 注册 `midscene://` 自定义协议
+
+## 构建
+
+```bash
+# 构建所有包
+pnpm build
+
+# 构建单个包
+cd packages/<package-name> && pnpm build
+```
+
+## 常见问题
+
+### 任务执行报 "429 余额不足"
+
+视觉模型 API 账户余额不足。需要：
+- 登录对应平台充值（智谱: open.bigmodel.cn，阿里云: dashscope.console.aliyun.com）
+- 或更换其他有余额的模型 API Key
+
+### 浏览器没有打开
+
+确认已安装 Playwright 浏览器：
+```bash
+cd packages/desktop-client && npx playwright install chromium
+```
+
+### 桌面客户端连接不上服务器
+
+确认 server 已启动（端口 3000）。桌面客户端通过 WebSocket 连接 `ws://localhost:3000`。
+
+### Web 控制台端口冲突
+
+web-console 已改为 5174 端口，desktop-client 使用 5173 端口，两者不会冲突。
+
+## 开发说明
+
+- TypeScript 项目引用 (Project References) 用于 monorepo 类型检查
+- `pnpm workspace:*` 引用 workspace 内部包
+- Electron 主进程使用动态 import 加载 Playwright 和 Midscene（避免打包体积过大）
+- Midscene 视觉 AI 通过环境变量配置，不硬编码在代码中

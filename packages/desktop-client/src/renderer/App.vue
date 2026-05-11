@@ -5,7 +5,7 @@
       <div class="container mx-auto px-4 py-4">
         <div class="flex items-center justify-between">
           <div>
-            <h1 class="text-2xl font-bold text-gray-900">🤖 auto-test-agent</h1>
+            <h1 class="text-2xl font-bold text-gray-900">auto-test-agent</h1>
             <p class="text-sm text-gray-600">桌面客户端 v0.2.0</p>
           </div>
           <div class="flex items-center gap-4">
@@ -21,14 +21,28 @@
                   }
                 ]"
               ></div>
-              <span class="text-sm text-gray-600">
-                {{ connectionText }}
-              </span>
+              <span class="text-sm text-gray-600">{{ connectionText }}</span>
+            </div>
+
+            <!-- 当前任务状态 -->
+            <div
+              v-if="currentTask.id"
+              :class="[
+                'px-3 py-1 rounded-full text-sm font-medium',
+                {
+                  'bg-green-100 text-green-800': currentTask.status === 'completed',
+                  'bg-blue-100 text-blue-800 animate-pulse': currentTask.status === 'running',
+                  'bg-red-100 text-red-800': currentTask.status === 'failed',
+                  'bg-yellow-100 text-yellow-800': currentTask.status === 'pending' || currentTask.status === 'cancelled',
+                }
+              ]"
+            >
+              {{ currentTask.name }} - {{ taskStatusText }}
             </div>
 
             <!-- 客户端信息 -->
             <div class="text-sm text-gray-600">
-              {{ clientInfo.name }} ({{ clientInfo.platform }})
+              {{ clientInfo.platform }}
             </div>
           </div>
         </div>
@@ -48,7 +62,7 @@
         <div class="lg:col-span-1">
           <!-- 系统状态卡片 -->
           <div class="bg-white rounded-lg shadow p-6 mb-6">
-            <h2 class="text-lg font-semibold mb-4">💻 系统状态</h2>
+            <h2 class="text-lg font-semibold mb-4">系统状态</h2>
             <div class="space-y-3">
               <div class="flex justify-between">
                 <span class="text-gray-600">平台</span>
@@ -70,8 +84,8 @@
           </div>
 
           <!-- 配置信息卡片 -->
-          <div class="bg-white rounded-lg shadow p-6">
-            <h2 class="text-lg font-semibold mb-4">⚙️ 配置信息</h2>
+          <div class="bg-white rounded-lg shadow p-6 mb-6">
+            <h2 class="text-lg font-semibold mb-4">配置信息</h2>
             <div class="space-y-3">
               <div class="flex justify-between">
                 <span class="text-gray-600">服务器</span>
@@ -91,47 +105,39 @@
               </div>
             </div>
           </div>
-        </div>
-      </div>
 
-      <!-- 功能特性展示 -->
-      <div class="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div class="bg-white rounded-lg shadow p-6">
-          <div class="text-3xl mb-2">🔄</div>
-          <h3 class="font-semibold mb-2">智能重试</h3>
-          <p class="text-sm text-gray-600">
-            失败自动重试，使用补偿策略提高成功率
-          </p>
-        </div>
-
-        <div class="bg-white rounded-lg shadow p-6">
-          <div class="text-3xl mb-2">⚡</div>
-          <h3 class="font-semibold mb-2">性能监控</h3>
-          <p class="text-sm text-gray-600">
-            详细记录每个环节的耗时，识别性能瓶颈
-          </p>
-        </div>
-
-        <div class="bg-white rounded-lg shadow p-6">
-          <div class="text-3xl mb-2">🔍</div>
-          <h3 class="font-semibold mb-2">错误诊断</h3>
-          <p class="text-sm text-gray-600">
-            智能分析错误原因，提供解决方案建议
-          </p>
+          <!-- 任务快速信息 -->
+          <div v-if="currentTask.id" class="bg-white rounded-lg shadow p-6">
+            <h2 class="text-lg font-semibold mb-4">当前任务</h2>
+            <div class="space-y-3">
+              <div class="flex justify-between">
+                <span class="text-gray-600">任务名称</span>
+                <span class="font-medium text-sm">{{ currentTask.name }}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-gray-600">进度</span>
+                <span class="font-medium">{{ currentTask.progress }}%</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-gray-600">耗时</span>
+                <span class="font-medium">{{ formattedDuration }}</span>
+              </div>
+              <div class="flex justify-between">
+                <span class="text-gray-600">步骤</span>
+                <span class="font-medium">{{ currentTask.currentStep }} / {{ currentTask.totalSteps }}</span>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </main>
 
     <!-- 底部状态栏 -->
     <footer class="bg-white border-t border-gray-200 mt-8">
-      <div class="container mx-auto px-4 py-4">
+      <div class="container mx-auto px-4 py-3">
         <div class="flex items-center justify-between text-sm text-gray-600">
-          <div>
-            内存使用: {{ memoryUsage }} | CPU: {{ cpuUsage }}
-          </div>
-          <div>
-            运行时间: {{ uptime }}
-          </div>
+          <div>内存: {{ memoryUsage }}</div>
+          <div>运行时间: {{ uptime }}</div>
         </div>
       </div>
     </footer>
@@ -144,12 +150,16 @@ import { useTaskExecution } from '../composables/useTaskExecution'
 import { config as sharedConfig } from '@auto-test-agent/shared'
 import TaskExecutionPanel from './components/TaskExecutionPanel.vue'
 
-// 使用任务执行 composable
-const { connectionState, currentTask } = useTaskExecution()
+const {
+  connectionState,
+  currentTask,
+  formattedDuration,
+  initTaskExecution,
+  destroyTaskExecution,
+} = useTaskExecution()
 
 // 客户端信息
 const clientInfo = ref({
-  name: 'auto-test-agent',
   platform: process.platform,
 })
 
@@ -166,19 +176,13 @@ const config = ref(sharedConfig.getConfig())
 
 // 性能监控
 const memoryUsage = ref('0 MB')
-const cpuUsage = ref('0%')
 const uptime = ref('0:00:00')
 
-let performanceTimer: NodeJS.Timeout | null = null
+let performanceTimer: ReturnType<typeof setInterval> | null = null
 
-// 更新性能数据
 const updatePerformance = () => {
   const usage = process.memoryUsage()
   memoryUsage.value = `${Math.round(usage.heapUsed / 1024 / 1024)} MB`
-
-  const cpus = require('os').cpus()
-  const avgLoad = require('os').loadavg()[0]
-  cpuUsage.value = `${avgLoad.toFixed(2)} (${cpus.length} 核心)`
 
   const uptimeSeconds = Math.floor(process.uptime())
   const hours = Math.floor(uptimeSeconds / 3600)
@@ -189,93 +193,36 @@ const updatePerformance = () => {
 
 // 连接状态文本
 const connectionText = computed(() => {
-  const stateTexts = {
+  const map: Record<string, string> = {
     disconnected: '未连接',
     connecting: '连接中...',
     connected: '已连接',
     reconnecting: '重连中...',
     failed: '连接失败',
   }
-  return stateTexts[connectionState.value] || '未知状态'
+  return map[connectionState.value] || '未知状态'
 })
 
-// 组件挂载
-onMounted(() => {
-  console.log('🚀 桌面客户端启动')
+// 任务状态文本
+const taskStatusText = computed(() => {
+  const map: Record<string, string> = {
+    pending: '等待中',
+    running: '执行中',
+    completed: '已完成',
+    failed: '失败',
+    cancelled: '已取消',
+  }
+  return map[currentTask.status] || '未知状态'
+})
 
-  // 启动性能监控
+onMounted(() => {
+  initTaskExecution()
   updatePerformance()
   performanceTimer = setInterval(updatePerformance, 5000)
-
-  // 监听来自主进程的消息
-  window.addEventListener('message', handleMainProcessMessage)
 })
 
-// 组件卸载
 onUnmounted(() => {
-  if (performanceTimer) {
-    clearInterval(performanceTimer)
-  }
-  window.removeEventListener('message', handleMainProcessMessage)
+  if (performanceTimer) clearInterval(performanceTimer)
+  destroyTaskExecution()
 })
-
-// 处理主进程消息
-const handleMainProcessMessage = (event: MessageEvent) => {
-  const { type, data } = event.data
-
-  switch (type) {
-    case 'task:start':
-      console.log('📋 收到任务启动消息:', data)
-      break
-    case 'task:status':
-      console.log('📊 收到任务状态更新:', data)
-      break
-    case 'health:check':
-      console.log('🏥 收到健康检查结果:', data)
-      break
-    default:
-      console.log('📩 收到未知消息类型:', type)
-  }
-}
 </script>
-
-<style>
-/* 全局样式 */
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-}
-
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-/* 滚动条样式 */
-::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-
-::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb {
-  background: #888;
-  border-radius: 4px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #555;
-}
-
-/* 文本选择颜色 */
-::selection {
-  background: #3b82f6;
-  color: white;
-}
-</style>

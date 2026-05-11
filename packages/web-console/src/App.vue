@@ -15,10 +15,10 @@
           <div style="margin-top: 20px; background: #f5f5f5; padding: 15px; border-radius: 4px">
             <h4>执行步骤：</h4>
             <ol style="padding-left: 20px; margin: 10px 0">
-              <li>打开页面 https://www.google.com/webhp</li>
-              <li>在搜索框中输入"华为"</li>
-              <li>点击搜索按钮</li>
-              <li>等待结果加载</li>
+              <li>打开百度首页</li>
+              <li>AI视觉识别搜索框，输入"华为"</li>
+              <li>AI视觉识别搜索按钮，点击</li>
+              <li>AI视觉等待搜索结果出现</li>
             </ol>
           </div>
 
@@ -26,35 +26,44 @@
             <button
               @click="handleStart"
               :disabled="isLoading"
-              style="
-                padding: 12px 24px;
-                font-size: 16px;
-                background: isLoading ? #ccc : #4caf50;
-                color: white;
-                border: none;
-                border-radius: 4px;
-                cursor: isLoading ? not-allowed : pointer;
-                font-weight: bold;
-              "
+              :style="{
+                padding: '12px 32px',
+                fontSize: '16px',
+                background: isLoading ? '#3a3a3a' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                color: isLoading ? '#666' : '#fff',
+                border: 'none',
+                borderRadius: '8px',
+                cursor: isLoading ? 'not-allowed' : 'pointer',
+                fontWeight: 'bold',
+                letterSpacing: '1px',
+                transition: 'all 0.3s ease',
+                boxShadow: isLoading ? 'none' : '0 4px 15px rgba(102, 126, 234, 0.4)',
+                transform: isLoading ? 'none' : 'scale(1)',
+                opacity: isLoading ? '0.6' : '1',
+              }"
+              @mouseenter="($event.target as HTMLElement).style.transform = isLoading ? 'none' : 'scale(1.05)'"
+              @mouseleave="($event.target as HTMLElement).style.transform = 'scale(1)'"
             >
-              {{ isLoading ? '⏳ 执行中...' : '🚀 START' }}
+              {{ isLoading ? '执行中...' : 'START' }}
             </button>
 
             <button
               @click="handleClearLogs"
               :disabled="isLoading"
-              style="
-                padding: 12px 24px;
-                font-size: 16px;
-                background: isLoading ? #ccc : #f44336;
-                color: white;
-                border: none;
-                border-radius: 4px;
-                cursor: isLoading ? not-allowed : pointer;
-                font-weight: bold;
-              "
+              :style="{
+                padding: '12px 24px',
+                fontSize: '16px',
+                background: isLoading ? '#3a3a3a' : 'transparent',
+                color: isLoading ? '#555' : '#aaa',
+                border: isLoading ? '1px solid #333' : '1px solid #555',
+                borderRadius: '8px',
+                cursor: isLoading ? 'not-allowed' : 'pointer',
+                fontWeight: '500',
+                transition: 'all 0.3s ease',
+                opacity: isLoading ? '0.5' : '1',
+              }"
             >
-              🗑️ 清空日志
+              清空日志
             </button>
           </div>
         </div>
@@ -383,10 +392,10 @@ const handleClearLogs = () => {
 
 const simulateTaskProgress = (taskId: string) => {
   const steps = [
-    { action: '打开页面 https://www.google.com/webhp', duration: 2000, mayFail: false },
-    { action: '在搜索框中输入"华为"', duration: 1000, mayFail: false },
-    { action: '点击搜索按钮', duration: 1500, mayFail: false },
-    { action: '等待结果加载', duration: 2000, mayFail: true },
+    { action: '打开百度首页', duration: 2000, mayFail: false },
+    { action: 'AI视觉识别搜索框，输入"华为"', duration: 3000, mayFail: false },
+    { action: 'AI视觉识别搜索按钮，点击', duration: 2000, mayFail: false },
+    { action: 'AI视觉等待搜索结果出现', duration: 2000, mayFail: true },
   ]
 
   let currentStep = 0

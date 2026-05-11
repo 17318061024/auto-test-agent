@@ -21,6 +21,132 @@ import { config } from '@auto-test-agent/shared'
  */
 let mainWindow: BrowserWindow | null = null
 let currentTaskId: string | null = null
+let activeBrowser: any = null
+
+/**
+ * 使用 Playwright + Midscene 视觉AI 执行任务
+ * 通过截图 + 大模型识别来操作页面，不依赖 CSS 选择器
+ */
+async function runTaskWithBrowser(taskData: any): Promise<void> {
+  const taskId = taskData.taskId || taskData.id
+  const taskName = taskData.name || '未命名任务'
+  const rawSteps = taskData.steps || []
+  console.log(`🌐 使用视觉AI执行任务: ${taskName}, ${rawSteps.length} 步`)
+
+  let browser: any = null
+  let page: any = null
+  let agent: any = null
+
+  const send = (channel: string, data: any) => {
+    if (mainWindow) mainWindow.webContents.send(channel, data)
+  }
+
+  try {
+    // 动态导入 playwright 和 midscene
+    const { chromium } = await import('playwright')
+    const { PlaywrightAgent } = await import('@midscene/web/playwright')
+
+    // 启动有头浏览器
+    browser = await chromium.launch({ headless: false })
+    activeBrowser = browser
+    const context = await browser.newContext({ viewport: { width: 1280, height: 800 } })
+    page = await context.newPage()
+
+    // 初始化 Midscene 视觉AI agent
+    agent = new PlaywrightAgent(page, {
+      waitForNetworkIdleTimeout: 3000,
+    })
+
+    send('task:status:update', {
+      taskId,
+      status: 'running',
+      currentStep: 0,
+      totalSteps: rawSteps.length,
+      progress: 0,
+    })
+
+    send('task:log', { taskId, message: `开始执行: ${taskName}` })
+
+    // 逐步执行
+    for (let i = 0; i < rawSteps.length; i++) {
+      const step = rawSteps[i]
+      const stepId = `step_${i + 1}`
+      const stepAction = step.action
+      const stepParams = step.params || []
+      const stepDesc = step.description || ''
+      const stepStart = Date.now()
+
+      send('step:complete', { stepId, action: stepAction, status: 'running', duration: 0 })
+
+      try {
+        if (stepAction === 'open') {
+          // 打开页面：直接用 playwright（不需要视觉识别）
+          await page.goto(stepParams[0] || 'about:blank', { waitUntil: 'domcontentloaded', timeout: 30000 })
+          // 等待页面稳定
+          await page.waitForTimeout(2000)
+        } else if (stepAction === 'aiAct') {
+          // AI 自动规划执行（描述包含在 params[0] 或 description 中）
+          const prompt = stepDesc || stepParams[0] || ''
+          await agent.aiAct(prompt)
+        } else if (stepAction === 'aiInput') {
+          // 视觉AI 输入文字
+          const locateText = stepParams[0] || stepDesc || '输入框'
+          const value = stepParams[1] || ''
+          await agent.aiInput(locateText, { value })
+        } else if (stepAction === 'aiTap') {
+          // 视觉AI 点击
+          const locateText = stepParams[0] || stepDesc || '按钮'
+          await agent.aiTap(locateText)
+        } else if (stepAction === 'aiWaitFor') {
+          // 视觉AI 等待条件
+          const condition = stepDesc || stepParams[0] || '页面加载完成'
+          await agent.aiWaitFor(condition, { timeoutMs: 15000 })
+        } else if (stepAction === 'aiQuery') {
+          // 视觉AI 提取数据
+          const query = stepDesc || stepParams[0] || ''
+          const result = await agent.aiQuery(query)
+          console.log(`📊 AI查询结果:`, JSON.stringify(result))
+        } else if (stepAction === 'wait') {
+          await page.waitForTimeout(Number(stepParams[0]) || 1000)
+        } else {
+          // 其他操作：尝试用 AI 视觉方式执行
+          const aiPrompt = stepDesc || `${stepAction} ${stepParams.join(' ')}`
+          console.log(`🤖 尝试视觉AI执行: ${aiPrompt}`)
+          await agent.aiAct(aiPrompt)
+        }
+
+        const duration = Date.now() - stepStart
+        send('step:complete', { stepId, action: stepAction, status: 'success', duration })
+        send('task:status:update', {
+          taskId,
+          status: 'running',
+          currentStep: i + 1,
+          totalSteps: rawSteps.length,
+          progress: Math.round(((i + 1) / rawSteps.length) * 100),
+        })
+      } catch (stepErr: any) {
+        const duration = Date.now() - stepStart
+        send('step:complete', { stepId, action: stepAction, status: 'failed', duration, error: stepErr.message })
+        throw new Error(`步骤 ${i + 1} (${stepAction}) 失败: ${stepErr.message}`)
+      }
+    }
+
+    // 任务完成
+    send('task:completed:update', { taskId, duration: Date.now() - (taskData.startTime || Date.now()) })
+    wsClient.sendTaskCompleted(taskId, {})
+    console.log(`✅ 任务完成: ${taskName}`)
+
+  } catch (error: any) {
+    console.error(`❌ 任务执行失败: ${taskName}`, error.message)
+    send('task:failed:update', { taskId, error: error.message })
+    wsClient.sendTaskFailed(taskId, { error: error.message })
+  } finally {
+    if (browser) {
+      await browser.close().catch(() => {})
+    }
+    activeBrowser = null
+  }
+}
 
 /**
  * 创建主窗口
@@ -294,9 +420,15 @@ function setupWebSocketHandlers(): void {
   wsClient.on('task:assigned', (data) => {
     console.log('📋 收到任务分配:', data)
 
+    // 先通知渲染进程显示任务信息
     if (mainWindow) {
       mainWindow.webContents.send('task:assigned', data)
     }
+
+    // 启动真实浏览器执行
+    runTaskWithBrowser(data).catch((err) => {
+      console.error('❌ 浏览器任务执行失败:', err)
+    })
   })
 
   // 任务开始

@@ -5,9 +5,13 @@ node_modules/
 
 # Build outputs
 dist/
+dist-electron/
 build/
 out/
 *.tsbuildinfo
+
+# Midscene run reports
+midscene_run/
 
 # Logs
 logs
@@ -45,3 +49,6 @@ coverage/
 # Temporary files
 *.tmp
 .temp/
+
+# Downloaded chromium
+chromium/

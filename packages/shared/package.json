@@ -32,7 +32,13 @@
       "default": "./src/utils.ts"
     }
   },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "typecheck": "tsc --noEmit"
+  },
   "devDependencies": {
-    "@types/node": "^20.19.39"
+    "@types/node": "^20.11.5",
+    "typescript": "^5.3.3"
   }
 }

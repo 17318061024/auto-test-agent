@@ -12,9 +12,10 @@
   },
   "dependencies": {
     "@auto-test-agent/shared": "workspace:*",
-    "@midscene/web": "^1.0.0",
+    "@midscene/web": "^1.7.5",
+    "@playwright/test": "^1.59.1",
     "decompress": "^4.2.1",
-    "playwright": "^1.40.0",
+    "playwright": "^1.59.1",
     "socket.io-client": "^4.6.1"
   },
   "devDependencies": {
