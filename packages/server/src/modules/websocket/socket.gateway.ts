@@ -167,7 +167,10 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   getOnlineClients() {
-    return this.clientService.getOnlineClients()
+    // 只返回桌面客户端，排除 web console 等非执行端
+    return this.clientService.getOnlineClients().filter(
+      c => c.metadata?.type === 'desktop-client',
+    )
   }
 
   private broadcastClients() {
