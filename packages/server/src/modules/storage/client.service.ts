@@ -60,4 +60,14 @@ export class ClientService {
   getOnlineClients(): Client[] {
     return this.findAll().filter(client => client.status === 'online')
   }
+
+  findBySocketId(socketId: string): Client | undefined {
+    return this.findAll().find(c => c.metadata?.socketId === socketId)
+  }
+
+  findOnlineById(id: string): Client | undefined {
+    const client = this.findOne(id)
+    if (client && client.status === 'online') return client
+    return undefined
+  }
 }

@@ -31,86 +31,129 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
     private readonly clientService: ClientService,
     private readonly taskService: TaskService,
   ) {
-    this.logger.log('SocketGateway constructed');
+    this.logger.log('SocketGateway constructed')
   }
 
   handleConnection(client: Socket) {
     this.logger.log(`Client connected: ${client.id}`)
 
-    if (!this.clientService) {
-      this.logger.warn('clientService not injected, skipping client registration')
-      return
-    }
-
-    // 注册客户端
     this.clientService.create({
       name: `Client-${client.id.substr(0, 8)}`,
       status: 'online',
       metadata: { socketId: client.id },
     })
 
-    // 广播客户端列表
     this.broadcastClients()
   }
 
   handleDisconnect(client: Socket) {
     this.logger.log(`Client disconnected: ${client.id}`)
 
-    if (!this.clientService) return
-
-    // 更新客户端状态
-    const clients = this.clientService.findAll()
-    const disconnectedClient = clients.find(
-      c => c.metadata?.socketId === client.id,
-    )
-
+    const disconnectedClient = this.clientService.findBySocketId(client.id)
     if (disconnectedClient) {
       this.clientService.updateStatus(disconnectedClient.id, 'offline')
+
+      // 将该客户端正在执行的任务标记为 failed
+      const runningTasks = this.taskService.findAll().filter(
+        t => t.assignedClientId === disconnectedClient.id && t.status === 'running',
+      )
+      for (const task of runningTasks) {
+        this.taskService.updateStatus(task.id, 'failed')
+        this.server.emit('task:updated', {
+          taskId: task.id,
+          status: 'failed',
+          result: { error: '客户端断开连接' },
+        })
+      }
     }
 
-    // 广播客户端列表
     this.broadcastClients()
   }
 
-  @SubscribeMessage('register')
+  @SubscribeMessage('client:register')
   handleRegister(
     @ConnectedSocket() client: Socket,
-    @MessageBody() data: { name: string },
+    @MessageBody() data: { type?: string; platform?: string; arch?: string; version?: string; hostname?: string },
   ) {
-    this.logger.log(`Client registered: ${data.name}`)
+    const existing = this.clientService.findBySocketId(client.id)
+    if (!existing) return
 
-    // 更新客户端信息
-    const clients = this.clientService.findAll()
-    const existingClient = clients.find(
-      c => c.metadata?.socketId === client.id,
-    )
+    const displayName = data.hostname || data.type || `Client-${client.id.substr(0, 8)}`
+    this.clientService.update(existing.id, {
+      name: displayName,
+      metadata: {
+        ...existing.metadata,
+        ...data,
+        socketId: client.id,
+      },
+    })
 
-    if (existingClient) {
-      this.clientService.update(existingClient.id, { name: data.name })
+    this.logger.log(`Client registered: ${displayName} (${data.platform || 'unknown'})`)
+    this.broadcastClients()
+  }
+
+  @SubscribeMessage('client:heartbeat')
+  handleHeartbeat(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() _data: any,
+  ) {
+    const existing = this.clientService.findBySocketId(client.id)
+    if (existing) {
+      this.clientService.update(existing.id, { status: 'online' })
     }
+  }
+
+  @SubscribeMessage('task:progress')
+  handleTaskProgress(
+    @ConnectedSocket() _client: Socket,
+    @MessageBody() data: { taskId: string; status: string; currentStep?: number; totalSteps?: number; progress?: number },
+  ) {
+    this.server.emit('task:updated', data)
+  }
+
+  @SubscribeMessage('task:completed')
+  handleTaskCompleted(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { taskId: string; result?: any },
+  ) {
+    this.logger.log(`Task completed: ${data.taskId}`)
+    this.taskService.updateStatus(data.taskId, 'completed')
+
+    // 客户端恢复 online
+    const existing = this.clientService.findBySocketId(client.id)
+    if (existing) {
+      this.clientService.updateStatus(existing.id, 'online')
+    }
+
+    this.server.emit('task:updated', {
+      taskId: data.taskId,
+      status: 'completed',
+      result: data.result,
+    })
 
     this.broadcastClients()
   }
 
-  @SubscribeMessage('task:update')
-  handleTaskUpdate(
+  @SubscribeMessage('task:failed')
+  handleTaskFailed(
     @ConnectedSocket() client: Socket,
-    @MessageBody() data: { taskId: string; status: string; result?: any },
+    @MessageBody() data: { taskId: string; error?: string },
   ) {
-    this.logger.log(`Task update: ${data.taskId} - ${data.status}`)
+    this.logger.log(`Task failed: ${data.taskId} - ${data.error}`)
+    this.taskService.updateStatus(data.taskId, 'failed')
 
-    // 更新任务状态
-    this.taskService.updateStatus(
-      data.taskId,
-      data.status as any,
-    )
+    const existing = this.clientService.findBySocketId(client.id)
+    if (existing) {
+      this.clientService.updateStatus(existing.id, 'online')
+    }
 
-    // 广播任务更新
     this.server.emit('task:updated', {
       taskId: data.taskId,
-      status: data.status,
-      result: data.result,
+      status: 'failed',
+      result: { error: data.error },
     })
+
+    this.broadcastClients()
   }
 
   assignTask(clientId: string, task: any) {

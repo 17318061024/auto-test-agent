@@ -31,7 +31,7 @@ const config = {
 
   // WebSocket 配置
   websocket: {
-    url: getEnvVar('VITE_WS_URL', 'ws://localhost:3001'),
+    url: getEnvVar('VITE_WS_URL', 'ws://localhost:3000'),
     autoConnect: getEnvBool('VITE_WS_AUTO_CONNECT', true),
     reconnectInterval: getEnvNumber('VITE_WS_RECONNECT_INTERVAL', 3000),
     maxReconnectAttempts: getEnvNumber('VITE_WS_MAX_RECONNECT', 5),

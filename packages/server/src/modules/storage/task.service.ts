@@ -13,6 +13,7 @@ export interface Task {
   steps: any[]
   config: Record<string, any>
   status: 'pending' | 'running' | 'completed' | 'failed'
+  assignedClientId?: string
   createdAt: string
   updatedAt: string
 }

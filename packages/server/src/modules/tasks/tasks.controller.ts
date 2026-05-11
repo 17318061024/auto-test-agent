@@ -17,6 +17,7 @@ import {
 import { TasksService } from './tasks.service.js'
 import { CreateTaskDto } from './dto/create-task.dto.js'
 import { UpdateTaskDto } from './dto/update-task.dto.js'
+import { RunTaskDto } from './dto/run-task.dto.js'
 
 @Controller('api/tasks')
 export class TasksController {
@@ -51,8 +52,8 @@ export class TasksController {
   }
 
   @Post(':id/run')
-  run(@Param('id') id: string) {
-    return this.tasksService.run(id)
+  run(@Param('id') id: string, @Body() runTaskDto: RunTaskDto) {
+    return this.tasksService.run(id, runTaskDto.clientId)
   }
 
   @Post(':id/cancel')
