@@ -36,6 +36,7 @@ export interface TaskState {
   duration: number
   error?: string
   logs: TaskLog[]
+  videoPath?: string
 }
 
 export interface TaskStatusMessage {
@@ -68,6 +69,7 @@ const currentTask = reactive<TaskState>({
   startTime: 0,
   duration: 0,
   logs: [],
+  videoPath: undefined,
 })
 
 const steps = ref<any[]>([])
@@ -308,6 +310,7 @@ function resetTask() {
     endTime: undefined,
     logs: [],
     error: undefined,
+    videoPath: undefined,
   })
   steps.value = []
 }
@@ -394,6 +397,12 @@ function initTaskExecution() {
         currentTask.duration = currentTask.endTime - currentTask.startTime
       }
       addLog('error', `任务失败: ${data?.error || '未知错误'}`)
+    })
+    ipcRenderer.on('task:video', (_event: any, data: any) => {
+      if (data?.videoPath) {
+        currentTask.videoPath = data.videoPath
+        addLog('success', `执行录制已保存`)
+      }
     })
     connectionState.value = ConnectionState.CONNECTED
     console.log('IPC 监听器已设置')

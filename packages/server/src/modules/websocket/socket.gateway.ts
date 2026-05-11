@@ -73,12 +73,13 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('client:register')
   handleRegister(
     @ConnectedSocket() client: Socket,
-    @MessageBody() data: { type?: string; platform?: string; arch?: string; version?: string; hostname?: string },
+    @MessageBody() data: { type?: string; platform?: string; arch?: string; version?: string; hostname?: string; username?: string; clientName?: string },
   ) {
     const existing = this.clientService.findBySocketId(client.id)
     if (!existing) return
 
-    const displayName = data.hostname || data.type || `Client-${client.id.substr(0, 8)}`
+    // 优先用用户自定义名称，其次 hostname，最后自动生成
+    const displayName = data.clientName || data.hostname || data.type || `Client-${client.id.substr(0, 8)}`
     this.clientService.update(existing.id, {
       name: displayName,
       metadata: {
@@ -88,7 +89,7 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
       },
     })
 
-    this.logger.log(`Client registered: ${displayName} (${data.platform || 'unknown'})`)
+    this.logger.log(`Client registered: ${displayName} (${data.username || ''}@${data.hostname || 'unknown'} ${data.platform || ''})`)
     this.broadcastClients()
   }
 

@@ -10,8 +10,9 @@
  * - 任务执行和状态管理
  */
 
-import { app, BrowserWindow, ipcMain } from 'electron'
+import { app, BrowserWindow, ipcMain, protocol, net, shell } from 'electron'
 import path from 'path'
+import fs from 'fs'
 import { registerProtocol, startProtocolListening, ProtocolAction } from './ProtocolHandler.js'
 import { wsClient, ConnectionState } from './WebSocketClient.js'
 import { config } from '@auto-test-agent/shared'
@@ -22,6 +23,14 @@ import { config } from '@auto-test-agent/shared'
 let mainWindow: BrowserWindow | null = null
 let currentTaskId: string | null = null
 let activeBrowser: any = null
+
+/**
+ * 视频录制存储目录
+ */
+const VIDEOS_DIR = path.join(app.getPath('userData'), 'videos')
+if (!fs.existsSync(VIDEOS_DIR)) {
+  fs.mkdirSync(VIDEOS_DIR, { recursive: true })
+}
 
 /**
  * 使用 Playwright + Midscene 视觉AI 执行任务
@@ -36,6 +45,7 @@ async function runTaskWithBrowser(taskData: any): Promise<void> {
   let browser: any = null
   let page: any = null
   let agent: any = null
+  let videoPath: string | null = null
 
   const send = (channel: string, data: any) => {
     if (mainWindow) mainWindow.webContents.send(channel, data)
@@ -49,7 +59,10 @@ async function runTaskWithBrowser(taskData: any): Promise<void> {
     // 启动有头浏览器
     browser = await chromium.launch({ headless: false })
     activeBrowser = browser
-    const context = await browser.newContext({ viewport: { width: 1280, height: 800 } })
+    const context = await browser.newContext({
+      viewport: { width: 1280, height: 800 },
+      recordVideo: { dir: VIDEOS_DIR, size: { width: 1280, height: 800 } },
+    })
     page = await context.newPage()
 
     // 初始化 Midscene 视觉AI agent
@@ -141,6 +154,19 @@ async function runTaskWithBrowser(taskData: any): Promise<void> {
     send('task:failed:update', { taskId, error: error.message })
     wsClient.sendTaskFailed(taskId, { error: error.message })
   } finally {
+    // 关闭浏览器前获取录制视频路径
+    if (page) {
+      try {
+        const video = page.video()
+        if (video) {
+          videoPath = await video.path()
+          console.log(`🎬 录制视频已保存: ${videoPath}`)
+          send('task:video', { taskId, videoPath })
+        }
+      } catch (e) {
+        console.warn('获取视频路径失败:', e)
+      }
+    }
     if (browser) {
       await browser.close().catch(() => {})
     }
@@ -409,6 +435,58 @@ function setupIpcHandlers(): void {
     wsClient.disconnect()
   })
 
+  // 获取任务录制视频路径
+  ipcMain.handle('video:getPath', async (_event, taskId: string) => {
+    const files = fs.readdirSync(VIDEOS_DIR).filter(f => f.endsWith('.webm')).sort().reverse()
+    // 返回最新的视频文件路径（Playwright 自动命名）
+    if (files.length > 0) {
+      return path.join(VIDEOS_DIR, files[0])
+    }
+    return null
+  })
+
+  // 获取所有录制视频列表
+  ipcMain.handle('video:list', async () => {
+    if (!fs.existsSync(VIDEOS_DIR)) return []
+    return fs.readdirSync(VIDEOS_DIR)
+      .filter(f => f.endsWith('.webm'))
+      .map(f => {
+        const fullPath = path.join(VIDEOS_DIR, f)
+        const stat = fs.statSync(fullPath)
+        return { name: f, path: fullPath, size: stat.size, createdAt: stat.birthtimeMs }
+      })
+      .sort((a, b) => b.createdAt - a.createdAt)
+  })
+
+  // 用系统播放器打开视频文件
+  ipcMain.handle('video:openExternal', async (_event, filePath: string) => {
+    await shell.openPath(filePath)
+  })
+
+  // 获取客户端名称
+  ipcMain.handle('client:getName', async () => {
+    return wsClient.loadClientName()
+  })
+
+  // 保存客户端名称并重新注册
+  ipcMain.handle('client:setName', async (_event, name: string) => {
+    wsClient.saveClientName(name)
+    return true
+  })
+
+  // 获取客户端完整注册信息
+  ipcMain.handle('client:getInfo', async () => {
+    const customName = wsClient.loadClientName()
+    return {
+      clientName: customName,
+      hostname: require('os').hostname(),
+      username: require('os').userInfo().username,
+      platform: process.platform,
+      arch: process.arch,
+      version: app.getVersion(),
+    }
+  })
+
   console.log('📡 IPC通信处理器已设置')
 }
 
@@ -466,6 +544,15 @@ function setupWebSocketHandlers(): void {
  */
 app.whenReady().then(() => {
   console.log('🚀 应用已就绪')
+
+  // 注册 video:// 协议用于本地视频播放
+  protocol.handle('video', (request) => {
+    const filePath = decodeURIComponent(request.url.replace('video://', ''))
+    if (!fs.existsSync(filePath)) {
+      return new Response('Not found', { status: 404 })
+    }
+    return net.fetch(`file://${filePath}`)
+  })
 
   // 创建主窗口
   mainWindow = createWindow()

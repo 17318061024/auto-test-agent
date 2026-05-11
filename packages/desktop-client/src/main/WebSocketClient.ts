@@ -15,6 +15,9 @@ import { io, Socket } from 'socket.io-client'
 import { config } from '@auto-test-agent/shared'
 import { EventEmitter } from 'events'
 import { app } from 'electron'
+import fs from 'fs'
+import path from 'path'
+import os from 'os'
 
 /**
  * WebSocket连接状态
@@ -232,13 +235,61 @@ export class WebSocketClient extends EventEmitter {
     }
 
     try {
-      clientInfo.hostname = require('os').hostname()
+      clientInfo.hostname = os.hostname()
     } catch {
       clientInfo.hostname = 'unknown'
     }
 
+    try {
+      clientInfo.username = os.userInfo().username
+    } catch {
+      clientInfo.username = 'unknown'
+    }
+
+    // 优先使用用户自定义的客户端名称
+    const customName = this.loadClientName()
+    if (customName) {
+      clientInfo.clientName = customName
+    }
+
     this.send(WSMessageType.CLIENT_REGISTER, clientInfo)
     console.log('📱 客户端已注册:', clientInfo)
+  }
+
+  /**
+   * 从配置文件加载客户端自定义名称
+   */
+  loadClientName(): string | null {
+    try {
+      const configPath = path.join(app.getPath('userData'), 'client-config.json')
+      if (fs.existsSync(configPath)) {
+        const raw = fs.readFileSync(configPath, 'utf-8')
+        const cfg = JSON.parse(raw)
+        return cfg.clientName || null
+      }
+    } catch {}
+    // 回退到 .env 中的 CLIENT_NAME
+    return process.env.CLIENT_NAME || null
+  }
+
+  /**
+   * 保存客户端自定义名称
+   */
+  saveClientName(name: string): void {
+    try {
+      const configPath = path.join(app.getPath('userData'), 'client-config.json')
+      let cfg: Record<string, any> = {}
+      if (fs.existsSync(configPath)) {
+        cfg = JSON.parse(fs.readFileSync(configPath, 'utf-8'))
+      }
+      cfg.clientName = name
+      fs.writeFileSync(configPath, JSON.stringify(cfg, null, 2), 'utf-8')
+
+      // 重新注册让服务端更新名称
+      this.registerClient()
+    } catch (e) {
+      console.error('保存客户端名称失败:', e)
+    }
   }
 
   /**
