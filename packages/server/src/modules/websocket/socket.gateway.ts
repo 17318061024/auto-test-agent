@@ -14,7 +14,7 @@ import {
 import { Server, Socket } from 'socket.io'
 import { ClientService } from '../storage/client.service.js'
 import { TaskService } from '../storage/task.service.js'
-import { Logger } from '@nestjs/common'
+import { Logger, Inject } from '@nestjs/common'
 
 @WebSocketGateway({
   cors: {
@@ -28,8 +28,8 @@ export class SocketGateway implements OnGatewayConnection, OnGatewayDisconnect {
   private readonly logger = new Logger(SocketGateway.name)
 
   constructor(
-    private readonly clientService: ClientService,
-    private readonly taskService: TaskService,
+    @Inject(ClientService) private readonly clientService: ClientService,
+    @Inject(TaskService) private readonly taskService: TaskService,
   ) {
     this.logger.log('SocketGateway constructed')
   }
